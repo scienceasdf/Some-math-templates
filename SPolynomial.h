@@ -1,6 +1,8 @@
 #ifndef SPOLYNOMIAL_H
 #define SPOLYNOMIAL_H
 
+#include<valarray>
+
 template <class iter, class numArea>
 numArea polyCalc(iter first, iter last, numArea x)
 {
@@ -47,6 +49,13 @@ void getBin(int n, OutputIter res)
     n/=2;
     ++next;
   }
+}
+
+template<class numArea>
+class polynomial{
+public:
+    std::valarray<numArea> coeArray;
+    polynomial()
 }
 
 #endif // SPOLYNOMIAL_H
