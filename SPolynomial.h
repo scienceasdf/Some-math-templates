@@ -38,4 +38,15 @@ void polyInt(inputIter first, inputIter last, OutputIter res)
     }
 }
 
+template <class OutputIter>
+void getBin(int n, OutputIter res)
+{
+  OutputIter next=res;
+  while(n!=0){
+    *next=n%2;
+    n/=2;
+    ++next;
+  }
+}
+
 #endif // SPOLYNOMIAL_H
