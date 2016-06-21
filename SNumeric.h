@@ -135,11 +135,12 @@ double convolution(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, iter2 yI
     int a=0,b=n;
     for(int i=0;i<=n;++i){
         result+=(a<an && b<bn)?(*xIterFirst)*(*yIterFirst):0;
-        ++xIterFirst; ++yIterFirst;
+        ++xIterFirst; --yIterFirst;
         ++a; --b;
     }
     return result;
 }
+
 
 template<class iter1,class iter2, class Out>
 Out convolution(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, iter2 yIterLast, Out res)
