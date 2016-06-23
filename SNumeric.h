@@ -141,7 +141,10 @@ double convolution(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, iter2 yI
     return result;
 }
 
-
+/* Calculate the convolution for two arrays.
+ * Like polynomials' mutiply, it writes the results in a new array( or container).
+ * Programmed by SHEN Weihong, algorithm written by SHEN weihong.
+ */
 template<class iter1,class iter2, class Out>
 Out convolution(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, iter2 yIterLast, Out res)
 {
@@ -154,6 +157,13 @@ Out convolution(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, iter2 yIter
     return res;
 }
 
+//-----------------------------------------------------------------------------
+
+
+/*  Calulates the fast Fourier transform based on 2.
+ *  Programmed by SHEN Weihong.( original creation)
+ *  Users can only use the class std::complex<double>
+ */
 template<class iter, class outputIter>
 inline void FFT(iter first, iter last, outputIter res)
 {
@@ -162,20 +172,20 @@ inline void FFT(iter first, iter last, outputIter res)
     const double PI=3.14159265358979323846;
     if(n!=2){
 
-        complex* temp1=new complex[N];
-        complex* temp2=new complex[N];
-        complex* out1=new complex[N];
-        complex* out2=new complex[N];
+        std::complex<double>* temp1=new std::complex<double>[N];
+        std::complex<double>* temp2=new std::complex<double>[N];
+        std::complex<double>* out1=new std::complex<double>[N];
+        std::complex<double>* out2=new std::complex<double>[N];
         for(int i=0;i<N;++i){
             temp1[i]=*first;
             ++first;
             temp2[i]=*first;
             ++first;
         }
-        const complex J(0,1);
-        complex w=exp(-2.0*PI*J/(double) n);
-        complex wk=1;
-        if(n>=128){
+        const std::complex<double> J(0,1);
+        std::complex<double> w=exp(-2.0*PI*J/(double) n);
+        std::complex<double> wk=1;
+        if(n>=1024){         //If the number is too large, we can call one more thread. And the number can be changed.
             std::thread t2([temp2,out2,&N](){FFT(temp2,temp2+N,out2);});
             FFT(temp1,temp1+N,out1);
             delete [] temp1;
@@ -204,15 +214,18 @@ inline void FFT(iter first, iter last, outputIter res)
         delete [] out1; delete [] out2;
     }
     else{
-        complex y1=*first;
+        std::complex<double> y1=*first;
         ++first;
-        complex y2=*first;
+        std::complex<double> y2=*first;
         *res=(y1+y2);
         ++res;
         *res=(y1-y2);
     }
 }
 
+/*  Calulates the inverse fast Fourier transform based on 2.
+ *  Programmed by SHEN Weihong.( original creation)
+ */
 template<class iter, class outputIter>
 inline void IFFT(iter first, iter last, outputIter res)
 {
@@ -221,20 +234,20 @@ inline void IFFT(iter first, iter last, outputIter res)
     double s=.5;
     const double PI=3.14159265358979323846;
     if(n!=2){
-        complex* temp1=new complex[N];
-        complex* temp2=new complex[N];
-        complex* out1=new complex[N];
-        complex* out2=new complex[N];
+        std::complex<double>* temp1=new std::complex<double>[N];
+        std::complex<double>* temp2=new std::complex<double>[N];
+        std::complex<double>* out1=new std::complex<double>[N];
+        std::complex<double>* out2=new std::complex<double>[N];
         for(int i=0;i<N;++i){
             temp1[i]=*first;
             ++first;
             temp2[i]=*first;
             ++first;
         }
-        const complex J(0,1);
-        complex w=exp(2.0*PI*J/(double) n);
-        complex wk=1.0;
-        if(n>=128){
+        const std::complex<double> J(0,1);
+        std::complex<double> w=exp(2.0*PI*J/(double) n);
+        std::complex<double> wk=1.0;
+        if(n>=1024){
             std::thread t2([temp2,out2,&N](){IFFT(temp2,temp2+N,out2);});
             IFFT(temp1,temp1+N,out1);
             delete [] temp1;
@@ -263,13 +276,14 @@ inline void IFFT(iter first, iter last, outputIter res)
         delete [] out1; delete [] out2;
     }
     else{
-        complex y1=*first;
+        std::complex<double> y1=*first;
         ++first;
-        complex y2=*first;
+        std::complex<double> y2=*first;
         *res=s*(y1+y2);
         ++res;
         *res=s*(y1-y2);
     }
 }
+
 
 #endif // SNUMERIC_H_INCLUDED
