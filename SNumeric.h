@@ -167,60 +167,50 @@ Out convolution(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, iter2 yIter
 template<class iter, class outputIter>
 inline void FFT(iter first, iter last, outputIter res)
 {
-    int n=std::distance(first,last);
-    int N=n/2;
-    const double PI=3.14159265358979323846;
-    if(n!=2){
+	int n = last - first;// std::distance(first, last);
+	int N = n /2;
+	const double PI = 3.14159265358979323846;
+	if (n != 2) {
 
-        std::complex<double>* temp1=new std::complex<double>[N];
-        std::complex<double>* temp2=new std::complex<double>[N];
-        std::complex<double>* out1=new std::complex<double>[N];
-        std::complex<double>* out2=new std::complex<double>[N];
-        for(int i=0;i<N;++i){
-            temp1[i]=*first;
-            ++first;
-            temp2[i]=*first;
-            ++first;
-        }
-        const std::complex<double> J(0,1);
-        std::complex<double> w=exp(-2.0*PI*J/(double) n);
-        std::complex<double> wk=1;
-        if(n>=1024){         //If the number is too large, we can call one more thread. And the number can be changed.
-            std::thread t2([temp2,out2,&N](){FFT(temp2,temp2+N,out2);});
-            FFT(temp1,temp1+N,out1);
-            delete [] temp1;
-            t2.join();
-            delete [] temp2;
-        }
+		complex* temp1 = new complex[N*4];
+		complex* temp2 = temp1 + N;
+		complex* out1 = temp2 + N;
+		complex* out2 = out1 + N;
+		for (int i = 0; i<N; ++i) {
+			temp1[i] = *first;
+			++first;
+			temp2[i] = *first;
+			++first;
+		}
+		const complex J(0, 1);
+		complex w = exp(-2.0*PI*J / (double)n);
+		complex wk = 1;
+		if (n >= 512) {
+			concurrency::parallel_invoke([temp2, out2, &N]() {FFT(temp2, temp2 + N, out2); },
+										 [temp1, out1, &N]() {FFT(temp1, temp1 + N, out1); });
+		}
 
-        else{
-            FFT(temp1,temp1+N,out1);
-            FFT(temp2,temp2+N,out2);
-            delete [] temp1;
-            delete [] temp2;
-        }
-
-        for(int k=0;k<N;k++){
-            *res=(out1[k]+wk*out2[k]);
-            wk*=w;
-            ++res;
-        }
-        wk=1;
-        for(int k=0;k<N;k++){
-            *res=(out1[k]-wk*out2[k]);
-            wk*=w;
-            ++res;
-        }
-        delete [] out1; delete [] out2;
-    }
-    else{
-        std::complex<double> y1=*first;
-        ++first;
-        std::complex<double> y2=*first;
-        *res=(y1+y2);
-        ++res;
-        *res=(y1-y2);
-    }
+		else {
+			FFT(temp1, temp1 + N, out1);
+			FFT(temp2, temp2 + N, out2);
+		}
+	
+		for (int k = 0; k<N; k++) {
+			*res = (out1[k] + wk*out2[k]);
+			res[N]= (out1[k] - wk*out2[k]);
+			wk *= w;
+			++res;
+		}
+		delete[] temp1;
+	}
+	else {
+		complex y1 = *first;
+		++first;
+		complex y2 = *first;
+		*res = (y1 + y2);
+		++res;
+		*res = (y1 - y2);
+	}
 }
 
 /*  Calulates the inverse fast Fourier transform based on 2.
@@ -229,61 +219,52 @@ inline void FFT(iter first, iter last, outputIter res)
 template<class iter, class outputIter>
 inline void IFFT(iter first, iter last, outputIter res)
 {
-    int n=std::distance(first,last);
-    int N=n/2;
-    double s=.5;
-    const double PI=3.14159265358979323846;
-    if(n!=2){
-        std::complex<double>* temp1=new std::complex<double>[N];
-        std::complex<double>* temp2=new std::complex<double>[N];
-        std::complex<double>* out1=new std::complex<double>[N];
-        std::complex<double>* out2=new std::complex<double>[N];
-        for(int i=0;i<N;++i){
-            temp1[i]=*first;
-            ++first;
-            temp2[i]=*first;
-            ++first;
-        }
-        const std::complex<double> J(0,1);
-        std::complex<double> w=exp(2.0*PI*J/(double) n);
-        std::complex<double> wk=1.0;
-        if(n>=1024){
-            std::thread t2([temp2,out2,&N](){IFFT(temp2,temp2+N,out2);});
-            IFFT(temp1,temp1+N,out1);
-            delete [] temp1;
-            t2.join();
-            delete [] temp2;
-        }
+	int n = last - first;
+	int N = n / 2;
+	double s = .5;
+	const double PI = 3.14159265358979323846;
+	if (n != 2) {
+		complex* temp1 = new complex[N * 4];
+		complex* temp2 = temp1 + N;
+		complex* out1 = temp2 + N;
+		complex* out2 = out1 + N;
+		for (int i = 0; i<N; ++i) {
+			temp1[i] = *first;
+			++first;
+			temp2[i] = *first;
+			++first;
+		}
+		const complex J(0, 1);
+		complex w = exp(2.0*PI*J / (double)n);
+		complex wk = 1.0;
+		if (n >= 512) {
+			concurrency::parallel_invoke([temp2, out2, &N]() {IFFT(temp2, temp2 + N, out2); },
+										 [temp1, out1, &N]() {IFFT(temp1, temp1 + N, out1); });
+		}
 
-        else{
-            IFFT(temp1,temp1+N,out1);
-            IFFT(temp2,temp2+N,out2);
-            delete [] temp1;
-            delete [] temp2;
-        }
+		else {
+			IFFT(temp1, temp1 + N, out1);
+			IFFT(temp2, temp2 + N, out2);
+		}
 
-        for(int k=0;k<N;k++){
-            *res=s*(out1[k]+wk*out2[k]);
-            wk*=w;
-            ++res;
-        }
-        wk=1.0;
-        for(int k=0;k<N;k++){
-            *res=s*(out1[k]-wk*out2[k]);
-            wk*=w;
-            ++res;
-        }
-        delete [] out1; delete [] out2;
-    }
-    else{
-        std::complex<double> y1=*first;
-        ++first;
-        std::complex<double> y2=*first;
-        *res=s*(y1+y2);
-        ++res;
-        *res=s*(y1-y2);
-    }
+		for (int k = 0; k<N; k++) {
+			*res = s*(out1[k] + wk*out2[k]);
+			res[N]= s*(out1[k] - wk*out2[k]);
+			wk *= w;
+			++res;
+		}
+		delete[] temp1; 
+	}
+	else {
+		complex y1 = *first;
+		++first;
+		complex y2 = *first;
+		*res = s*(y1 + y2);
+		++res;
+		*res = s*(y1 - y2);
+	}
 }
+
 
 
 #endif // SNUMERIC_H_INCLUDED
