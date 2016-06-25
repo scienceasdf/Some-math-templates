@@ -62,7 +62,7 @@ void getBin(int n, OutputIter res)
     }
 }
 
-template<class T>   
+template<class T>
 class polynomial{
 private:
     T* array;
@@ -86,14 +86,16 @@ private:
 public:
     polynomial():degree(0),size(1),degUpdated(true) {array=new T; *array=0;}
     polynomial(T val);
-    polynomial(size_t n,const T val); // Construct a (n-1) degree polynomial, all coefficients of val.
-    polynomial(const T* p, size_t n);   // Construct a (n-1) degree polynomial, coefficients from the T pointer starts and on.
+    polynomial(size_t n,const T val); // Create a (n-1) degree polynomial, all coefficients of val.
+    polynomial(const T* p, size_t n);   // Create a (n-1) degree polynomial, coefficients from the T pointer starts and on.
     polynomial(polynomial& poly); // Copy a polynomial.
     ~polynomial() {delete [] array;}
 
     T operator[] (size_t n) const;
     T& operator[] (size_t n);
 
+    polynomial<T>& operator=(polynomial<T>&& poly);
+    polynomial<T>& operator=(polynomial<T>& poly);
     polynomial<T>& operator*=(const T arg) {std::for_each(begin(),end(),[arg] (T& s){s*=arg;});}
     polynomial<T>& operator/=(const T arg) {std::for_each(begin(),end(),[arg] (T& s){s/=arg;});}
     polynomial<T>& operator+=(const polynomial<T>& poly);
@@ -140,32 +142,29 @@ polynomial<T>::polynomial(T val)
 }
 
 template<class T>
-polynomial<T>::polynomial(size_t n, const T val)    // Checked
+polynomial<T>::polynomial(size_t n, const T val):
+size(n), degree(n-1), degUpdated(val!=(T)0)         // Checked
 {
     array=new T[n];
     for(int i=0;i<n;++i){
         array[i]=val;
     }
-    size=n;
-    degree=n-1;     // Here should be changed if val==0;
-    degUpdated=(val!=(T)0);
 }
 
 template<class T>   // Checked
-polynomial<T>::polynomial(const T* p, size_t n)
+polynomial<T>::polynomial(const T* p, size_t n):
+size(n), degree(n-1), degUpdated(false)
 {
     array=new T[n];
     for(int i=0;i<n;++i){
         array[i]=p[i];
     }
-    size=n;
-    degree=n-1;     // Here should be changed if T[n-1]==0 or like this.
-    degUpdated=false;
 }
 
 
 template<class T>
-polynomial<T>::polynomial(polynomial& poly)     // Checked
+polynomial<T>::polynomial(polynomial& poly):
+degUpdated(true)                                // Checked
 {
     size_t n=poly.getDegree()+1;
     array=new T[n];
@@ -253,14 +252,41 @@ polynomial<T>& polynomial<T>::operator-=(const polynomial& rhs)     // Checked
 }
 
 template<class T>
-polynomial<T> operator *(polynomial<T>& lhs, polynomial<T>& rhs)
+polynomial<T>& polynomial<T>::operator=(polynomial<T>&& rhs)
 {
-    int n=lhs.getDegree()+rhs.getDegree()+1;
-    polynomial<T> temp(n,1.0);
-    convolution(lhs.begin(),lhs.end(),rhs.begin(),rhs.end(),temp.begin());
-    return temp;
+    int n=rhs.getDegree();
+    delete [] array;
+    array=new T[n+1];
+    std::copy(rhs.begin(),rhs.end(),array);
+    degree=n;
+    size=n+1;
+    degUpdated=true;
+    return *this;
 }
 
+template<class T>
+polynomial<T>& polynomial<T>::operator=(polynomial<T>& rhs)
+{
+    int n=rhs.getDegree();
+    delete [] array;
+    array=new T[n+1];
+    std::copy(rhs.begin(),rhs.end(),array);
+    degree=n;
+    size=n+1;
+    degUpdated=true;
+    return *this;
+}
+
+template<class T>
+polynomial<T> operator *(polynomial<T>& lhs, polynomial<T>& rhs)
+{
+    int p=lhs.getDegree();
+    int q=rhs.getDegree();
+    int n=p+q+1;
+    polynomial<T> temp(n,1.0);
+    convolution(lhs.begin(),lhs.begin()+p+1,rhs.begin(),rhs.begin()+q+1,temp.begin());
+    return temp;
+}
 
 template<class T>
 polynomial<T> operator+(polynomial<T>& lhs, polynomial<T>& rhs)
