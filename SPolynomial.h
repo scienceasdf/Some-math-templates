@@ -291,19 +291,15 @@ polynomial<T> operator *(polynomial<T>& lhs, polynomial<T>& rhs)
 template<class T>
 polynomial<T> operator+(polynomial<T>& lhs, polynomial<T>& rhs)
 {
-    int n=std::max(lhs.getDegree,rhs.getDegree);
-    polynomial temp(n,1.0);
-
-
+    polynomial temp(lhs);
+    return (lhs+=rhs);
 }
 
 template<class T>
 polynomial<T> operator-(polynomial<T>& lhs, polynomial<T>& rhs)
 {
-    int n=std::max(lhs.getDegree,rhs.getDegree);
-    polynomial temp(n,1.0);
-
-
+     polynomial temp(lhs);
+     return (lhs-=rhs);
 }
 
 #endif // SPOLYNOMIAL_H
