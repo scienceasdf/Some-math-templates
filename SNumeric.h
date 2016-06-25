@@ -158,7 +158,9 @@ Out convolution(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, iter2 yIter
 }
 
 //-----------------------------------------------------------------------------
-
+#include<cmath>
+#include<complex>
+#include<ppl.h>
 
 /*  Calulates the fast Fourier transform based on 2.
  *  Programmed by SHEN Weihong.( original creation)
