@@ -93,14 +93,28 @@ template<class func> double RombergInt(func f, double a, double b, double eps, l
 double Gamma(double s);
 
 template<class iter1, class iter2, class numArea>
-double Lagrange(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, numArea varX)
-
+numArea Lagrange(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, numArea varX)
+{
+    int num=xIterLast-xIterFirst-1;
+	numArea l,f;
+	f=0.0;
+	for(int k=0;k<=num;k++)
+    {
+        l=1.0;
+        for(int j=0;(j<=num);j++)
+        {
+            l*=(j==k)?1:(varX-xIterFirst[j])/(xIterFirst[k]-xIterFirst[j]);
+        }
+        f+=l*yIterFirst[k];
+    }
+	return f;
+}
 
 
 
 //Solving ODE
 template<class func, class numArea, class OutputIter>
-numArea RungeKutta(func f, numArea lb, numArea ub, int n, OutputIter dest)
+numArea RungeKutta(func f, numArea lb, numArea ub, int n, OutputIter res)
 
 /* Calculate the convolution of two functions at some range.
  * Programmed by SHEN Weihong.
