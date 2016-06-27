@@ -96,9 +96,9 @@ template<class iter1, class iter2, class numArea>
 numArea Lagrange(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, numArea varX)
 {
     int num=xIterLast-xIterFirst-1;
-	numArea l,f;
-	f=0.0;
-	for(int k=0;k<=num;k++)
+    numArea l,f;
+    f=0.0;
+    for(int k=0;k<=num;k++)
     {
         l=1.0;
         for(int j=0;(j<=num);j++)
@@ -107,14 +107,40 @@ numArea Lagrange(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, numArea va
         }
         f+=l*yIterFirst[k];
     }
-	return f;
+    return f;
 }
 
 
 
 //Solving ODE
-template<class func, class numArea, class OutputIter>
-numArea RungeKutta(func f, numArea lb, numArea ub, int n, OutputIter res)
+template<class BinOp, class numArea, class OutputIter>
+void RungeKutta(BinOp func, numArea lb, numArea ub, numArea alpha, int nn, OutputIter res)
+{
+    numArea x0,y0,h,k1,k2,k3,k4,x1,y1;
+    x0=lb;
+    y0=alpha;
+    // res[0] should be y0, which will be more convenient.
+    // Thus the last number which will be written is res[nn] instead of res[nn-1].
+    *res=alpha;
+    ++res;
+    x1=lb;
+
+    //*res=alpha;
+    h=(ub-x0)/nn;
+    int r=1;
+    for(int n=1;n<(nn+1);n++)
+    {
+        k1=h*func(x0,y0);
+        k2=h*func(x0+h/2.0,y0+k1/2.0);
+        k3=h*func(x0+h/2.0,y0+k2/2.0);
+        k4=h*func(x0+h,y0+k3);
+        x1+=h;
+        (*res)=y0+(k1+2.0*k2+2.0*k3+k4)/6.0;
+        x0=x1;
+        y0=*res;
+        ++res;
+    }
+}
 
 /* Calculate the convolution of two functions at some range.
  * Programmed by SHEN Weihong.
