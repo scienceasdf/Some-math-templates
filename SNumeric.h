@@ -11,40 +11,40 @@
 /* Using the secant iteration method to solve equations.
    Programmed by Shen Weihong.
 */
-template<class F> double secantMethod(F func, double x0, double eps)
+template<class F, class numArea> numArea secantMethod(F func, numArea x0, double eps)
 {
-    double x1=1.5*x0;
-    double x,y0,y1;
+    numArea x1=1.5*x0;
+    numArea x,y0,y1;
     do
     {
         x=x1;
         x1=x1-func(x1)/(func(x1)-func(x0))*(x1-x0);
         x0=x;
-    } while(fabs(func(x1))>eps);
+    } while(abs(func(x1))>eps);
     return x1;
 }
 
-template<class F> double secantMethod(F func(), double x0, double x1, double eps)
+template<class F, class numArea> numArea secantMethod(F func(), numArea x0, numArea x1, double eps)
 {
-    double x,y0,y1;
+    numArea x,y0,y1;
     do
     {
         x=x1;
         x1=x1-func(x1)/(func(x1)-func(x0))*(x1-x0);
         x0=x;
-    } while(fabs(func(x1))>eps);
+    } while(abs(func(x1))>eps);
     return x1;
 }
 
-template<class F> double secantMethod(F func, double x0, double x1, double eps, int maxIter)
+template<class F, class numArea> numArea secantMethod(F func, numArea x0, numArea x1, double eps, int maxIter)
 {
-    double x,y0,y1;
+    numArea x,y0,y1;
     do
     {
         x=x1;
         x1=x1-func(x1)/(func(x1)-func(x0))*(x1-x0);
         x0=x;
-    } while(fabs(func(x1))>eps && (--maxIter)>0);
+    } while(abs(func(x1))>eps && (--maxIter)>0);
     return x1;
 }
 
@@ -112,11 +112,11 @@ numArea Lagrange(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, numArea va
 
 
 
-//Solving ODE
+//Solving ODE:y'=func(x,y)
 template<class BinOp, class numArea, class OutputIter>
-void RungeKutta(BinOp func, numArea lb, numArea ub, numArea alpha, int nn, OutputIter res)
+numArea RungeKutta(BinOp func, numArea lb, numArea ub, numArea alpha, int nn, OutputIter res)
 {
-    numArea x0,y0,h,k1,k2,k3,k4,x1,y1;
+    numArea x0,y0,h,k1,k2,k3,k4,x1;
     x0=lb;
     y0=alpha;
     // res[0] should be y0, which will be more convenient.
@@ -124,10 +124,9 @@ void RungeKutta(BinOp func, numArea lb, numArea ub, numArea alpha, int nn, Outpu
     *res=alpha;
     ++res;
     x1=lb;
-
-    //*res=alpha;
     h=(ub-x0)/nn;
     int r=1;
+
     for(int n=1;n<(nn+1);n++)
     {
         k1=h*func(x0,y0);
@@ -140,6 +139,57 @@ void RungeKutta(BinOp func, numArea lb, numArea ub, numArea alpha, int nn, Outpu
         y0=*res;
         ++res;
     }
+    return *res;
+}
+
+/* Solving two order ODE
+ * y1=f(x,y1,y2), y2=g(x,y1,y2), given x0 ,y10, y20.
+ * Specially, it can solve equations like y"=g(x,y,y'),
+ * as y1=y, y2=y', f(x,y1,y2)=y2.
+ */
+template<class func1, class func2, class numArea, class outputIter1, class outputIter2>
+void RungeKutta(func1 f, func2 g, numArea lb, numArea ub,
+                 numArea init_y1, numArea init_y2, int nn, outputIter1 res_y1, outputIter2 res_y2)
+{
+    double m1,m2,m3,m4,k1,k2,k3,k4,y1,y2,x0,y0,z0,b,h,x1;
+    x0=lb;
+    h=(ub-x0)/nn;
+    x1=x0;
+    y1=init_y1;
+    y2=init_y2;
+    *res_y1=init_y1;
+    *res_y2=init_y2;
+    ++res_y1;
+    ++res_y2;
+
+    for(int n=1;n<(nn+1);n++)
+    {
+        k1=h*f(x1,y1,y2);
+        m1=h*g(x1,y1,y2);
+        k2=h*f(x1+.5*h,y1+k1/2,y2+m1/2);
+        m2=h*g(x1+h/2,y1+k1/2,y2+m1/2);
+        k3=h*f(x1+h/2,y1+k2/2,y2+m2/2);
+        m3=h*g(x1+h/2,y1+k2/2,y2+m2/2);
+        k4=h*f(x1+h,y1+k3,y2+m3);
+        m4=h*g(x1+h,y1+k3,y2+m3);
+
+        y1+=(k1+2*k2+2*k3+k4)/6;
+        y2+=(m1+2*m2+2*m3+m4)/6;
+        *res_y1=y1;
+        *res_y2=y2;
+        ++res_y1;
+        ++res_y2;
+        x1+=h;
+    }
+}
+/* Solving ODE like y"=f(x,y,y'), given x1, y1, x2, y2.
+ * Use Runge-Kutta method, shooting method and secant method.
+ */
+template<class func, class numArea, class outputIter>
+numArea RungeKutta(func f, numArea x1, numArea x2, numArea y1, numArea y2, int nn, outputIter res)
+{
+    //
+    secantMethod()
 }
 
 /* Calculate the convolution of two functions at some range.
@@ -201,8 +251,9 @@ Out convolution(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, iter2 yIter
 
 
 /*  Calulates the fast Fourier transform based on 2.
- *  Programmed by SHEN Weihong.( original creation)
- *  Users can only use the class std::complex<double>
+ *  Programmed by SHEN Weihong.( original creation).
+ *  Users can only use the class std::complex<double>.
+ *  The result is the same with MATLAB, which is convenient for mixed programming.
  */
 template<class iter, class outputIter>
 inline void FFT(iter first, iter last, outputIter res)
@@ -264,7 +315,8 @@ inline void FFT(iter first, iter last, outputIter res)
 }
 
 /*  Calulates the inverse fast Fourier transform based on 2.
- *  Programmed by SHEN Weihong.( original creation)
+ *  Programmed by SHEN Weihong.( original creation).
+ *  The result is the same with MATLAB, which is convenient for mixed programming.
  */
 template<class iter, class outputIter>
 inline void IFFT(iter first, iter last, outputIter res)
