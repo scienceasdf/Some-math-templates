@@ -69,14 +69,13 @@ template<class T> T spline<T>::getPos(T x)
             h[i]=vecX[i+1]-vecX[i];
             alpha[i]=h[i-1]/(h[i-1]+h[i]);
             beta[i]=3.0*((1.0-alpha[i])/h[i-1]*(vecY[i]-vecY[i-1])+alpha[i]/h[i]*(vecY[i+1]-vecY[i]));
-            a[i]=1.0-alpha[i+1];
+            a[i-1]=1.0-alpha[i];
             c[i]=alpha[i];
             b[i]=2.0;
 
         }
         a[n-1]=1.0;
         beta[n]=3.0/h[n-1]*(vecY[n]-vecY[n-1]);
-        a[0]=1-alpha[1];
 
         m=root(a,b,c,beta,n+1);
         delete [] alpha;
