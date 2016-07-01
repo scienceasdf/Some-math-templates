@@ -287,9 +287,61 @@ void RungeKutta(func1 f, func2 g, numArea lb, numArea ub,
 template<class func, class numArea, class outputIter>
 numArea RungeKutta(func f, numArea x1, numArea x2, numArea y1, numArea y2, int nn, outputIter res)
 {
-    //
-    secantMethod()
+    numArea dy=(y2-y1)/(x2-x1);
+    numArea dydx=secantMethod([&x1,&x2,&y1,&y2,&f,&nn](numArea Dy){return RungeKutta(
+                [](numArea& x, numArea& y, numArea& z){return z;},
+                [&f] (numArea& x, numArea& y, numArea& z){return f(x,y,z);},
+                x1,y,Dy,x2,n)-y2;},
+                dy,1e-7);
+    return dydx;
 }
+
+// Solving ODE with huge numbers of varieties.
+// Programmed by SHEN Weihong( original creation).
+// Input and Output data should all be vectorized.
+// It will be convenient for parallel optimization.
+// Users need to free the res memory themselves.
+template<class func, class numArea>
+void RungeKutta(func f, numArea* vecX, numArea ub, int dim, int nn, numArea** &res)
+{
+    //x=(x,y1,y2,...,yn), dim=n
+    //f(x)=f(x,y1,y2,...,yn) and returns an (n+1)-size array, f[0]=1.0;
+
+    numArea h=(ub-vecX[0])/nn;
+    numArea* x=new numArea[dim+1];
+    std::copy(vecX,vecX+dim+1,x);
+
+    res=new numArea* [nn+1];
+    for(int i=0;i<=nn;++i) res[i]=new numArea[dim+1];
+    for(int i=0;i<=dim;++i) res[0][i]=vecX[i];
+
+    for(int ct=1;ct<=nn;++ct){
+        numArea *k1,*k2,*k3,*k4;
+        k1=f(x); //k1[0]=1.0;
+        std::for_each(k1,k1+dim+1,[&h](numArea& k1) {k1*=h;});
+        for(int i=0;i<=dim;++i) x[i]+=.5*k1[i];
+
+        k2=f(x); //k2[0]=1.0;
+        std::for_each(k2,k2+dim+1,[&h](numArea& k2) {k2*=h;});
+        for(int i=0;i<=dim;++i) x[i]+=.5*k2[i];
+
+        k3=f(x); //k3[0]=1.0;
+        std::for_each(k3,k3+dim+1,[&h](numArea& k3) {k3*=h;});
+        for(int i=0;i<=dim;++i) x[i]+=.5*k3[i];
+
+        k4=f(x); //k4[0]=1.0;
+        std::for_each(k4,k4+dim+1,[&h](numArea& k4) {k4*=h;});
+        for(int i=0;i<=dim;++i) x[i]+=.5*k4[i];
+
+        for(int i=0;i<=dim;++i) res[ct][i]=res[ct-1][i]+(k1[i]+2.0*k2[i]+2.0*k3[i]+k4[i])/6.0;
+        std::copy(res[ct],res[ct]+dim+1,x);
+    }
+    
+    std::cout<<res<<"\n";
+    delete []x;
+
+}
+
 
 /* Calculate the convolution of two functions at some range.
  * Programmed by SHEN Weihong.
