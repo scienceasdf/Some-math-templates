@@ -111,16 +111,19 @@ numArea Lagrange(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, numArea va
 }
 
 //------------------------------------------------------------------------------------------------
+/* Creating a spline class.
+ * Programmed by SHEN Weihong.
+ */
 template<class T>
 class spline{
 public:
     std::vector<T> vecX;
     std::vector<T> vecY;
     spline() {}
-    spline(T* xFirst, T* xLast, T* yFirst);
+    spline(T* xFirst, T* xLast, T* yFirst);     // Create the class by T pointers or arrays.
     /*spline(std::vector<T>::iterator xFirst,
            std::vector<T>::iterator xLast,
-           std::vector<T>::iterator yFirst);*/
+           std::vector<T>::iterator yFirst);*/  // Create the class by vectors.
     ~spline(){delete [] m;}
 
     void addPoint(T x, T y) {vecX.push_back(x); vecY.push_back(y); sort(); isUpdated=false;}
@@ -149,14 +152,13 @@ template<class T> T spline<T>::getPos(T x)
             h[i]=vecX[i+1]-vecX[i];
             alpha[i]=h[i-1]/(h[i-1]+h[i]);
             beta[i]=3.0*((1.0-alpha[i])/h[i-1]*(vecY[i]-vecY[i-1])+alpha[i]/h[i]*(vecY[i+1]-vecY[i]));
-            a[i]=1.0-alpha[i+1];
+            a[i-1]=1.0-alpha[i];
             c[i]=alpha[i];
             b[i]=2.0;
 
         }
         a[n-1]=1.0;
         beta[n]=3.0/h[n-1]*(vecY[n]-vecY[n-1]);
-        a[0]=1-alpha[1];
 
         m=root(a,b,c,beta,n+1);
         delete [] alpha;
