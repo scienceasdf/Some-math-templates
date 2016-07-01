@@ -330,10 +330,10 @@ void RungeKutta(func f, numArea* vecX, numArea ub, int dim, int nn, numArea** &r
         std::for_each(k3,k3+dim+1,[&h](numArea& k3) {k3*=h;});
         for(int i=0;i<=dim;++i) x[i]=res[ct-1][i]+k3[i];
         k4=f(x); //k4[0]=1.0;
+        
+        std::for_each(k4,k4+dim+1,[&h](numArea& k4) {k4*=h;});
 
-        res[ct][0]=res[ct-1][0]+h;
-        for(int i=1;i<=dim;++i) res[ct][i]=res[ct-1][i]+(k1[i]+2.0*k2[i]+2.0*k3[i]+k4[i])/6.0;
-
+        for(int i=0;i<=dim;++i) res[ct][i]=res[ct-1][i]+(k1[i]+2.0*k2[i]+2.0*k3[i]+k4[i])/6.0;
     }
 
     std::cout<<res<<"\n";
