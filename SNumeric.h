@@ -302,7 +302,7 @@ numArea RungeKutta(func f, numArea x1, numArea x2, numArea y1, numArea y2, int n
 // It will be convenient for parallel optimization.
 // Users need to free the res memory themselves.
 template<class func, class numArea>
-void RungeKutta(func f, numArea* vecX, numArea ub, int dim, int nn, numArea** &res)
+void RungeKutta(func f, numArea* vecX, numArea ub, int dim, int nn, numArea** &res) // Hers must use ref para.
 {
     //x=(x,y1,y2,...,yn), dim=n
     //f(x)=f(x,y1,y2,...,yn) and returns an (n+1)-size array, f[0]=1.0;
@@ -318,25 +318,24 @@ void RungeKutta(func f, numArea* vecX, numArea ub, int dim, int nn, numArea** &r
     for(int ct=1;ct<=nn;++ct){
         numArea *k1,*k2,*k3,*k4;
         k1=f(x); //k1[0]=1.0;
+
         std::for_each(k1,k1+dim+1,[&h](numArea& k1) {k1*=h;});
-        for(int i=0;i<=dim;++i) x[i]+=.5*k1[i];
-
+        for(int i=0;i<=dim;++i) x[i]=res[ct-1][i]+.5*k1[i];
         k2=f(x); //k2[0]=1.0;
+
         std::for_each(k2,k2+dim+1,[&h](numArea& k2) {k2*=h;});
-        for(int i=0;i<=dim;++i) x[i]+=.5*k2[i];
-
+        for(int i=0;i<=dim;++i) x[i]=res[ct-1][i]+.5*k2[i];
         k3=f(x); //k3[0]=1.0;
+
         std::for_each(k3,k3+dim+1,[&h](numArea& k3) {k3*=h;});
-        for(int i=0;i<=dim;++i) x[i]+=.5*k3[i];
-
+        for(int i=0;i<=dim;++i) x[i]=res[ct-1][i]+k3[i];
         k4=f(x); //k4[0]=1.0;
-        std::for_each(k4,k4+dim+1,[&h](numArea& k4) {k4*=h;});
-        for(int i=0;i<=dim;++i) x[i]+=.5*k4[i];
 
-        for(int i=0;i<=dim;++i) res[ct][i]=res[ct-1][i]+(k1[i]+2.0*k2[i]+2.0*k3[i]+k4[i])/6.0;
-        std::copy(res[ct],res[ct]+dim+1,x);
+        res[ct][0]=res[ct-1][0]+h;
+        for(int i=1;i<=dim;++i) res[ct][i]=res[ct-1][i]+(k1[i]+2.0*k2[i]+2.0*k3[i]+k4[i])/6.0;
+
     }
-    
+
     std::cout<<res<<"\n";
     delete []x;
 
