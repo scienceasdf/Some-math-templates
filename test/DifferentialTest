@@ -1,0 +1,20 @@
+#include<iostream>
+#include<cmath>
+#include<SNumeric.h>
+
+double xx(double x)
+{
+    return x*x;
+}
+
+double xxx(double x)
+{
+    return x*x*x;
+}
+
+int main()
+{
+    std::cout<<d3f(exp,1.0,1e-4);
+    // The h should not be too small( like 1e-6), or it will work wrong.
+    return 0;
+}
