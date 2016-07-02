@@ -3,21 +3,17 @@
 #include<iostream>
 #include<SNumeric.h>
 
-double* f2(double* x)
+void f2(double* x, double* res)
 {
-    double* res=new double[2];
     res[0]=1.0;
     res[1]=x[0];
-    return res;
 }
 
-double* f1(double* x)
+void f1(double* x, double* res)
 {
-    double* res=new double[3];
     res[0]=1.0;
     res[1]=x[2];
     res[2]=x[1];
-    return res;
 }
 
 int main()
