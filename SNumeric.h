@@ -315,9 +315,10 @@ void RungeKutta(func f, numArea* vecX, numArea ub, int dim, int nn, numArea** &r
     res=new numArea* [nn+1];
     for(int i=0;i<=nn;++i) res[i]=new numArea[dim+1];
     for(int i=0;i<=dim;++i) res[0][i]=vecX[i];
-
+    numArea *k1,*k2,*k3,*k4;
+    
     for(int ct=1;ct<=nn;++ct){
-        numArea *k1,*k2,*k3,*k4;
+        
         k1=f(x); //k1[0]=1.0;
 
         std::for_each(k1,k1+dim+1,[&h](numArea& k1) {k1*=h;});
