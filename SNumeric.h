@@ -528,5 +528,29 @@ inline void IFFT(iter first, iter last, outputIter res)
     }
 }
 
+//---------------------------------------------------------
+// Numeric differential
+// In general, the h should not be too small, or it will work wrong( especially for d3f).
+// Accuracy can be got with bigger h.
+template<class func, class numArea>
+numArea d1f(func f, numArea x, numArea h)
+{
+    numArea dy=f(x+h)-f(x);
+    return (dy/h);
+}
+
+template<class func, class numArea>
+numArea d2f(func f, numArea x, numArea h)
+{
+    numArea dy=f(x+h)-2*f(x)+f(x-h);
+    return (dy/h/h);
+}
+
+template<class func, class numArea>
+numArea d3f(func f, numArea x, numArea h)
+{
+    numArea dy=f(x+2*h)-3*f(x+h)+3*f(x)-f(x-h);
+    return (dy/h/h/h);
+}
 
 #endif // SNUMERIC_H_INCLUDED
