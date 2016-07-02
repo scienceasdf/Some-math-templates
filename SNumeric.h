@@ -281,6 +281,7 @@ void RungeKutta(func1 f, func2 g, numArea lb, numArea ub,
         x1+=h;
     }
 }
+
 /* Solving ODE like y"=f(x,y,y'), given x1, y1, x2, y2.
  * Use Runge-Kutta method, shooting method and secant method.
  */
@@ -330,17 +331,17 @@ void RungeKutta(func f, numArea* vecX, numArea ub, int dim, int nn, numArea** &r
         std::for_each(k3,k3+dim+1,[&h](numArea& k3) {k3*=h;});
         for(int i=0;i<=dim;++i) x[i]=res[ct-1][i]+k3[i];
         k4=f(x); //k4[0]=1.0;
-        
+
         std::for_each(k4,k4+dim+1,[&h](numArea& k4) {k4*=h;});
 
         for(int i=0;i<=dim;++i) res[ct][i]=res[ct-1][i]+(k1[i]+2.0*k2[i]+2.0*k3[i]+k4[i])/6.0;
+        delete [] k1; delete [] k2; delete [] k3; delete [] k4;
     }
 
-    std::cout<<res<<"\n";
+
     delete []x;
 
 }
-
 
 /* Calculate the convolution of two functions at some range.
  * Programmed by SHEN Weihong.
