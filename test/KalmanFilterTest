@@ -1,0 +1,32 @@
+#include <iostream>
+#include<random>
+#include<functional>
+
+std::random_device rd;
+std::mt19937 gen(rd());
+std::normal_distribution<> dis(0,0.1);
+
+const double Q=1e-5;
+const double x=-0.37727;
+const double R=1e-2;        //Users can change the const numbers here
+
+void KalmanIter(double xk_1, double Pk_1, double& xk, double& Pk)
+{
+
+    double zk=dis(gen)+x;
+    double xk_=xk_1;
+    double Pk_=Pk_1+Q;
+    double Kg_k=Pk_/(Pk_+R);
+    xk=xk_+Kg_k*(zk-xk_);
+    Pk=(1-Kg_k)*Pk_;
+}
+
+int main()
+{
+    double x=0,p=1;
+    for(int i=0;i<50;++i){
+        KalmanIter(x,p,x,p);
+        std::cout<<x<<"\n";
+    }
+    return 0;
+}
