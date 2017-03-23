@@ -86,12 +86,6 @@ template<class func> double RombergInt(func f, double a, double b, double eps, l
 
 }
 
-/* Calculate the Gamma function.
-   Programmed by Shen Weihong.
-   Algorithm written by Shen Weihong( original creation).
-*/
-double Gamma(double s);
-
 template<class iter1, class iter2, class numArea>
 numArea Lagrange(iter1 xIterFirst, iter1 xIterLast, iter2 yIterFirst, numArea varX)
 {
@@ -119,18 +113,19 @@ class spline{
 public:
     std::vector<T> vecX;
     std::vector<T> vecY;
-    spline() {}
+    spline() :memory(false) {}
     spline(T* xFirst, T* xLast, T* yFirst);
     /*spline(std::vector<T>::iterator xFirst,
            std::vector<T>::iterator xLast,
            std::vector<T>::iterator yFirst);*/
-    ~spline(){delete [] m;}
+    ~spline(){if(memory){delete [] m;}}
 
-    void addPoint(T x, T y) {vecX.push_back(x); vecY.push_back(y); isUpdated=false;}
+    void addPoint(T x, T y) {vecX.push_back(x); vecY.push_back(y); sort(); isUpdated=false; memory=false;}
     T getPos(T x);
     void clear();
 private:
     bool isUpdated;
+    bool memory;
     T* m;
     void sort();
 };
@@ -162,7 +157,12 @@ template<class T> T spline<T>::getPos(T x)
         a[n-1]=1.0;
         beta[n]=3.0/h[n-1]*(vecY[n]-vecY[n-1]);
 
+        if(memory){
+            delete [] m;
+            memory=false;
+        }
         m=root(a,b,c,beta,n+1);
+        memory=true;
         delete [] alpha;
         delete [] beta;
         delete [] a;
@@ -215,6 +215,10 @@ template<class T> void spline<T>::clear()
 {
     vecX.clear();
     vecY.clear();
+    if(memory){
+        delete [] m;
+        memory=false;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -566,5 +570,13 @@ numArea d3f(func f, numArea x, numArea h)
     numArea dy=f(x+2*h)-3*f(x+h)+3*f(x)-f(x-h);
     return (dy/h/h/h);
 }
+
+/* Calculate the Gamma function.
+   Programmed by Shen Weihong.
+   Algorithm written by Shen Weihong( original creation).
+*/
+double Gamma(double s);
+
+float FastInvSqrt(float x);
 
 #endif // SNUMERIC_H_INCLUDED
