@@ -2,8 +2,11 @@
 #define SDYNAMICS_H
 
 class vec3{
+    friend mat33 rotationMatrix(const vec3& vec, double alpha);
+    friend mat33 crossProductMat(const vec3& vec);
 private:
     double x,y,z;
+    
 
 public:
     vec3() :x(.0), y(.0), z(.0) {}
@@ -36,7 +39,7 @@ inline void vec3::setY(double ypos){y=ypos;}
 inline void vec3::setZ(double zpos){z=zpos;}
 
 class quaternion{
-    friend quaternion operator*(const quaternion& Q) const;
+    friend const quaternion operator*(const quaternion& q1, const quaternion& q2) const;
 private:
     double x,y,z,s;
 public:
@@ -82,11 +85,17 @@ inline void quaternion::setScalar(double scalar) {s=scalar;}
 
 class mat33{
     friend mat33 quaternion::toRotationMatrix() const;
-
+    friend mat33 rotationMatrix(const vec3& vec, double alpha);
+    friend mat33 crossProductMat(const vec3& vec);
 private:
     double a[3][3];
+    bool orthogonal;
 public:
     mat33() {}
+    ~mat33() {}
+    
+    mat33 inverse();
+    mat33 transpose();
 
 };
 
@@ -101,5 +110,10 @@ class rigidBody
 {
     mat66 massTensor;
 };
+
+mat33 crossProductMat(const vec3& vec);
+mat33 rotationMatrix(const vec3& vec, double alpha);
+
+const quaternion operator*(const quaternion& q1, const quaternion& q2) const;
 
 #endif // SDYNAMICS_H
