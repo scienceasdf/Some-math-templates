@@ -1,11 +1,19 @@
 #include<SDynamics.h>
-#include<cmath>
 
 
-
-const quaternion operator*(const quaternion& q1, const quaternion& q2) const
+const quaternion operator*(const quaternion& q1, const quaternion& q2)
 {
-    
+    double s,i,j,k,s1,s2,x1,x2,y1,y2,z1,z2;
+    s1=q1.s; s2=q2.s;
+    x1=q1.x; x2=q2.x;
+    y1=q1.y; y2=q2.y;
+    z1=q1.z; z2=q2.z;
+    s=(s1*s2-x1*x2-y1*y2-z1*z2);
+    i=(s1*x2+s2*x1+y1*z2-y2*z1);
+    j=(s1*y2+s2*y1+z1*x2-x1*z2);
+    k=(s1*z2+s2*z1+x1*y2-x2*y1);
+    quaternion res(s,i,j,k);
+    return res;
 }
 
 mat33 quaternion::toRotationMatrix() const
@@ -32,6 +40,15 @@ quaternion quaternion::conjugated() const
     return res;
 }
 
+void quaternion::normalize()
+{
+    double l=length();
+    s/=l;
+    x/=l;
+    y/=l;
+    z/=l;
+}
+
 mat33 mat33::transpose()
 {
     mat33 res;
@@ -44,7 +61,7 @@ mat33 mat33::transpose()
     res.a[2][0]=a[0][2];
     res.a[2][1]=a[1][2];
     res.a[2][2]=a[2][2];
-    
+
     return res;
 }
 
@@ -55,12 +72,12 @@ mat33 rotationMatrix(const vec3& vec, double alpha)
     e1/=s;
     e2/=s;
     e3/=s;
-    
+
     double ca=cos(alpha);
     double sa=sin(alpha);
-    
+
     mat33 res;
-    
+
     res.a[0][0]=ca+e1*e1*(1.0-ca);
     res.a[0][1]=e1*e2*(1.0-ca)+e3*sa;
     res.a[0][2]=e1*e3*(1.0-ca)-e2*sa;
@@ -70,7 +87,7 @@ mat33 rotationMatrix(const vec3& vec, double alpha)
     res.a[2][0]=e1*e3*(1.0-ca)+e2*sa;
     res.a[2][1]=e2*e3*(1.0-ca)-e1*sa;
     res.a[2][2]=ca+e3*e3*(1.0-ca);
-    
+
     return res;
 }
 
@@ -84,5 +101,19 @@ mat33 crossProductMat(const vec3& vec)
     res.a[1][2]=-vec.x;
     res.a[2][0]=-vec.y;
     res.a[2][2]=vec.x;
+    return res;
+}
+
+const mat33 operator*(const mat33& m1, const mat33& m2)
+{
+    mat33 res;
+    for(int i=0;i<3;++i){
+        for(int j=0;j<3;++j){
+            res.a[i][j]=.0;
+            for(int k=0;k<3;++k)
+                res.a[i][j]+=m1.a[i][k]*m2.a[k][j];
+        }
+    }
+
     return res;
 }
