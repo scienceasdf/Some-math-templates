@@ -7,14 +7,11 @@ TransformController::TransformController(QObject *parent)
     , m_quat()
     , m_time(0.0f)
 {
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            tensor(i,j)=.0;
-        }
-    }
-    tensor(0,0)=80.0;
-    tensor(1,1)=10.0;
-    tensor(2,2)=80.0;
+    mat33 tensor,cosineMat;
+    vec3 angularM,omega;
+
+    double Ix=80.0,Iy=10.0,Iz=80.0;
+    tensor=mat33::fromDiag(Ix,Iy,Iz);
 
     angularM[0]=.0;
     angularM[1]=30.0;
@@ -31,23 +28,15 @@ TransformController::TransformController(QObject *parent)
     omega=tensor.inverse()*angularM;
     omega=temp*omega;
     vec3 am=tensor*(temp.transpose()*omega);
-    print(am);
+    //print(am);
+    print(tensor);
     cosineMat=temp.transpose();
 
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            tensor(i,j)=.0;
-        }
-    }
-    tensor(0,0)=80.0;
-    tensor(1,1)=10.0;
-    tensor(2,2)=80.0;
-    am=cosineMat*tensor*cosineMat.transpose()*(cosineMat*omega);
+    m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega);
+    am=m_body.getAngularMomentum();
     print(am);
-
-    //double T=omega.transpose()*(tensor*omega);
-    double T=(cosineMat*omega).transpose()*(tensor*(cosineMat*omega));
-    qDebug()<<T<<"\n";
+    tensor=m_body.getInertiaTensor();
+    print(tensor);
 
 }
 
@@ -83,66 +72,19 @@ float TransformController::time() const
 
 void TransformController::updateQuat()
 {
-    //m_quat=QQuaternion::fromAxisAndAngle(1,2,3,m_time);
-    /*static mat33 tensor_;
-    static vec3 ome;
-    static vec3 omega_;
-    static mat33 A;
-    const static vec3 v1(.0,.0,1.0);
-    static vec3 v2;
-
-    ome=omega;
-
-    A=getMatrix(ome,length(ome)*dt);
-    tensor_=A.transpose()*tensor*A;
-    omega_=tensor_.inverse()*angularM;
-    ome=.5*ome+.5*omega_;
-
-    A=getMatrix(ome,length(ome)*dt);
-    tensor_=A.transpose()*tensor*A;
-    omega_=tensor_.inverse()*angularM;
-    ome=.5*ome+.5*omega_;
-
-    A=getMatrix(ome,length(ome)*dt);
-    tensor=A.transpose()*tensor*A;
-    omega=tensor.inverse()*angularM;
-    cosineMat=A*cosineMat;
-    v2=cosineMat.transpose()*v1;
-
-
-    print(omega);
-    print(v2);
-    double T=omega.transpose()*(tensor*omega);
-    //double theta=std::atan2(omega.getY(),pow(omega.getX()*omega.getX()+omega.getZ()*omega.getZ(),.5));
-    double theta=std::atan2(v2.getY(),pow(v2.getX()*v2.getX()+v2.getZ()*v2.getZ(),.5));
-    qDebug()<<theta<<"\t"<<T<<"\n";
-
-    m_quat=fromMat33(cosineMat);
-    m_target->setRotation(m_quat);*/
-
-    //static mat33 A;
-    static double x=.0;
-    step(x,omega,cosineMat,dt);
-    m_quat=fromMat33(cosineMat.transpose());
+    m_body.do_step(dt);
+    m_quat=fromMat33(m_body.getCosineMat());
     m_target->setRotation(m_quat);
-    qDebug()<<m_quat;
 
-
-    //print(omega);
-
-    //mat33 ts=
-    vec3 am=cosineMat*tensor*cosineMat.transpose()*(cosineMat*omega);
+    static vec3 am,omega,z_;
+    static vec3 z(.0,1.0,.0);
+    z_=m_body.getCosineMat()*z;
+    print(z_);
+    am=m_body.getAngularMomentum();
+    omega=m_body.getOmega();
     print(am);
-    double theta=angle(am,omega)*degPerRad;     //here is wrong, for omega is expressed in the body frame
-    //hence theta doesn't represent the nutation angle
-    qDebug()<<theta<<"deg\n";
-    //print(cosineMat);
+    double T=m_body.getRotKineticEnergy(),theta=angle(z,z_)*degPerRad;
+    qDebug()<<theta<<T;
 
-    //double T=omega.transpose()*(tensor*omega);
-    //double T=(cosineMat*omega).transpose()*(tensor*(cosineMat*omega));
-    //double T=omega.getX()*omega.getX()+omega.getZ()*omega.getZ();
-    //double theta=std::atan2(omega.getY(),pow(omega.getX()*omega.getX()+omega.getZ()*omega.getZ(),.5));
-    //double theta=std::atan2(v2.getY(),pow(v2.getX()*v2.getX()+v2.getZ()*v2.getZ(),.5));
-    //qDebug()<<x<<T<<"\n";
 }
 
