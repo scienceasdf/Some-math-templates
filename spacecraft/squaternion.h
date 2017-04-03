@@ -128,6 +128,7 @@ mat33 getMatrix(vec3 vec, double alpha);
 double length(vec3& vec);
 
 QQuaternion fromMat33(mat33& mat);
+QQuaternion fromMat33(mat33&& mat);
 
 class mat33{
 
@@ -150,6 +151,9 @@ public:
 
     double& operator() (int i, int t);
 
+    static mat33 fromDiag(double x, double y, double z);
+
+
 };
 
 const mat33 operator*(const mat33& m1, const mat33& m2);
@@ -162,7 +166,11 @@ public:
 };
 
 
+double dotProduct(const vec3& vec1, const vec3& vec2);
+double angle(const vec3& vec1, const vec3& vec2);
 mat33 crossProductMat(const vec3& vec);
+mat33 crossProductMat2(const vec3& vec);
+mat33 crossProductMat3(const vec3& vec);
 mat33 rotationMatrix(const vec3& vec, double alpha);
 
 const quaternion operator*(const quaternion& q1, const quaternion& q2);
@@ -170,6 +178,7 @@ mat33 operator*(double factor, mat33 mat);
 vec3 operator*(mat33 mat, vec3 vec);
 vec3 operator *(double factor, vec3 vec);
 vec3 operator +(vec3 veca,vec3 vecb);
+vec3 operator -(vec3 veca,vec3 vecb);
 double operator *(vec3r v1, vec3 v2);
 mat33 operator *(vec3 v1,vec3r v2);
 mat33 operator +(mat33 m1, mat33 m2);
@@ -178,5 +187,6 @@ mat33 operator -(mat33 m1, mat33 m2);
 void print(vec3& vec);
 void print(mat33& mat);
 
-
+void func(double t, vec3& vec, mat33& cosMat, vec3& resVec, mat33& resMat);
+void step(double& t, vec3& omega, mat33& cosMat, double dt);
 #endif // SQUATERNION_H
