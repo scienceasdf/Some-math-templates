@@ -6,6 +6,7 @@
 #include<QQuaternion>
 
 #include"squaternion.h"
+#include"rigidbody.h"
 
 class TransformController: public QObject
 {
@@ -36,10 +37,12 @@ private:
     float m_time;
     float dt;
 
-    mat33 tensor;
+    rigidBody m_body;
+
+    /*mat33 tensor;
     vec3 omega;
     vec3 angularM;
-    mat33 cosineMat;
+    mat33 cosineMat;*/
 
 };
 
