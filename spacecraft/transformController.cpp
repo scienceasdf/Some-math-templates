@@ -133,7 +133,8 @@ void TransformController::updateQuat()
     //mat33 ts=
     vec3 am=cosineMat*tensor*cosineMat.transpose()*(cosineMat*omega);
     print(am);
-    double theta=angle(am,omega)*degPerRad;
+    double theta=angle(am,omega)*degPerRad;     //here is wrong, for omega is expressed in the body frame
+    //hence theta doesn't represent the nutation angle
     qDebug()<<theta<<"deg\n";
     //print(cosineMat);
 
