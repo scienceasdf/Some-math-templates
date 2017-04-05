@@ -114,6 +114,22 @@ void vec3::normalize()
     z/=l;
 }
 
+double& vec3::operator [](int i)
+{
+    return (i==0)?x:((i==1)?y:z);
+}
+
+double& vec3::operator()(int i)
+{
+    return (i==0)?x:((i==1)?y:z);
+}
+
+const double& vec3::operator()(int i) const
+{
+    return (i==0)?x:((i==1)?y:z);
+}
+
+
 double dotProduct(const vec3& vec1, const vec3& vec2)
 {
     return vec1(0)*vec2(0)+vec1(1)*vec2(1)+vec1(2)*vec2(2);
@@ -407,37 +423,24 @@ mat33 mat33::Identity()
     return mat;
 }
 
-double& vec3::operator [](int i)
-{
-    return (i==0)?x:((i==1)?y:z);
-}
 
-double& vec3::operator()(int i)
-{
-    return (i==0)?x:((i==1)?y:z);
-}
-
-const double& vec3::operator()(int i) const
-{
-    return (i==0)?x:((i==1)?y:z);
-}
 
 vec3 operator *(double factor, vec3 vec)
 {
-    vec3 res(factor*vec.getX(),factor*vec.getY(),factor*vec.getZ());
-    return res;
+    vec*=factor;
+    return vec;
 }
 
 vec3 operator +(vec3 veca,vec3 vecb)
 {
-    vec3 res(veca.getX()+vecb.getX(),veca.getY()+vecb.getY(),veca.getZ()+vecb.getZ());
-    return res;
+    veca+=vecb;
+    return veca;
 }
 
 vec3 operator -(vec3 veca,vec3 vecb)
 {
-    vec3 res(veca.getX()-vecb.getX(),veca.getY()-vecb.getY(),veca.getZ()-vecb.getZ());
-    return res;
+    veca-=vecb;
+    return veca;
 }
 
 double& vec3r::operator()(int i)
@@ -468,7 +471,7 @@ double operator *(vec3r v1,vec3 v2)
     return res;
 }
 
-mat33 operator +(mat33 m1, mat33 m2)
+mat33 operator +(mat33& m1, mat33& m2)
 {
     mat33 res;
     for(int i=0;i<3;++i){
@@ -479,7 +482,73 @@ mat33 operator +(mat33 m1, mat33 m2)
     return res;
 }
 
-mat33 operator -(mat33 m1, mat33 m2)
+mat33 operator -(mat33& m1, mat33& m2)
+{
+    mat33 res;
+    for(int i=0;i<3;++i){
+        for(int j=0;j<3;++j){
+            res(i,j)=m1(i,j)-m2(i,j);
+        }
+    }
+    return res;
+}
+
+mat33 operator +(mat33&& m1, mat33&& m2)
+{
+    mat33 res;
+    for(int i=0;i<3;++i){
+        for(int j=0;j<3;++j){
+            res(i,j)=m1(i,j)+m2(i,j);
+        }
+    }
+    return res;
+}
+
+mat33 operator -(mat33&& m1, mat33&& m2)
+{
+    mat33 res;
+    for(int i=0;i<3;++i){
+        for(int j=0;j<3;++j){
+            res(i,j)=m1(i,j)-m2(i,j);
+        }
+    }
+    return res;
+}
+
+mat33 operator +(mat33&& m1, mat33& m2)
+{
+    mat33 res;
+    for(int i=0;i<3;++i){
+        for(int j=0;j<3;++j){
+            res(i,j)=m1(i,j)+m2(i,j);
+        }
+    }
+    return res;
+}
+
+mat33 operator -(mat33&& m1, mat33& m2)
+{
+    mat33 res;
+    for(int i=0;i<3;++i){
+        for(int j=0;j<3;++j){
+            res(i,j)=m1(i,j)-m2(i,j);
+        }
+    }
+    return res;
+}
+
+mat33 operator +(mat33& m1, mat33&& m2)
+{
+    mat33 res;
+    for(int i=0;i<3;++i){
+        for(int j=0;j<3;++j){
+            res(i,j)=m1(i,j)+m2(i,j);
+        }
+    }
+    return res;
+}
+
+mat33 operator -(mat33& m1, mat33&& m2)
 {
     mat33 res;
     for(int i=0;i<3;++i){
