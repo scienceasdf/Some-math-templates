@@ -197,51 +197,74 @@ double length(vec3& vec)
     return pow(vec(0)*vec(0)+vec(1)*vec(1)+vec(2)*vec(2),.5);
 }
 
-QQuaternion fromMat33(mat33& mat)
+QQuaternion fromMat33(mat33& rot3x3)
 {
-    double q1=.5*pow(1.0+mat(0,0)-mat(1,1)-mat(2,2),.5);
-    if(q1>9e-3){
-        double q2=.25*(mat(0,1)+mat(1,0))/q1;
-        double q3=.25*(mat(0,2)+mat(2,0))/q1;
-        double q4=.25*(mat(1,2)-mat(2,1))/q1;
+    // Algorithm from:
+    // http://www.j3d.org/matrix_faq/matrfaq_latest.html#Q55
 
-        QQuaternion res(q4,q1,q2,q3);
-        //QQuaternion r2()
-        return res;
-    }
-    else{
-        double q3=.5*pow(1.0+mat(2,2)-mat(1,1)-mat(0,0),.5);
-        q1=.25*(mat(0,2)+mat(2,0))/q3;
-        double q2=.25*(mat(1,2)+mat(2,1))/q3;
-        double q4=.25*(mat(0,1)-mat(1,0))/q3;
+    float scalar;
+    float axis[3];
 
-        QQuaternion res(q4,q1,q2,q3);
-        qDebug()<<"^-^";
-        return res;
+    const float trace = rot3x3(0, 0) + rot3x3(1, 1) + rot3x3(2, 2);
+    if (trace > 0.00000001f) {
+        const float s = 2.0f * std::sqrt(trace + 1.0f);
+        scalar = 0.25f * s;
+        axis[0] = (rot3x3(2, 1) - rot3x3(1, 2)) / s;
+        axis[1] = (rot3x3(0, 2) - rot3x3(2, 0)) / s;
+        axis[2] = (rot3x3(1, 0) - rot3x3(0, 1)) / s;
+    } else {
+        static int s_next[3] = { 1, 2, 0 };
+        int i = 0;
+        if (rot3x3(1, 1) > rot3x3(0, 0))
+            i = 1;
+        if (rot3x3(2, 2) > rot3x3(i, i))
+            i = 2;
+        int j = s_next[i];
+        int k = s_next[j];
+
+        const float s = 2.0f * std::sqrt(rot3x3(i, i) - rot3x3(j, j) - rot3x3(k, k) + 1.0f);
+        axis[i] = 0.25f * s;
+        scalar = (rot3x3(k, j) - rot3x3(j, k)) / s;
+        axis[j] = (rot3x3(j, i) + rot3x3(i, j)) / s;
+        axis[k] = (rot3x3(k, i) + rot3x3(i, k)) / s;
     }
+
+    return QQuaternion(scalar, axis[0], axis[1], axis[2]);
 }
 
-QQuaternion fromMat33(mat33&& mat)
+QQuaternion fromMat33(mat33&& rot3x3)
 {
-    double q1=.5*pow(1.0+mat(0,0)-mat(1,1)-mat(2,2),.5);
-    if(q1>9e-3){
-        double q2=.25*(mat(0,1)+mat(1,0))/q1;
-        double q3=.25*(mat(0,2)+mat(2,0))/q1;
-        double q4=.25*(mat(1,2)-mat(2,1))/q1;
+    // Algorithm from:
+    // http://www.j3d.org/matrix_faq/matrfaq_latest.html#Q55
 
-        QQuaternion res(q4,q1,q2,q3);
-        return res;
-    }
-    else{
-        double q3=.5*pow(1.0+mat(2,2)-mat(1,1)-mat(0,0),.5);
-        q1=.25*(mat(0,2)+mat(2,0))/q3;
-        double q2=.25*(mat(1,2)+mat(2,1))/q3;
-        double q4=.25*(mat(0,1)-mat(1,0))/q3;
+    float scalar;
+    float axis[3];
 
-        QQuaternion res(q4,q1,q2,q3);
-        qDebug()<<"^-^";
-        return res;
+    const float trace = rot3x3(0, 0) + rot3x3(1, 1) + rot3x3(2, 2);
+    if (trace > 0.00000001f) {
+        const float s = 2.0f * std::sqrt(trace + 1.0f);
+        scalar = 0.25f * s;
+        axis[0] = (rot3x3(2, 1) - rot3x3(1, 2)) / s;
+        axis[1] = (rot3x3(0, 2) - rot3x3(2, 0)) / s;
+        axis[2] = (rot3x3(1, 0) - rot3x3(0, 1)) / s;
+    } else {
+        static int s_next[3] = { 1, 2, 0 };
+        int i = 0;
+        if (rot3x3(1, 1) > rot3x3(0, 0))
+            i = 1;
+        if (rot3x3(2, 2) > rot3x3(i, i))
+            i = 2;
+        int j = s_next[i];
+        int k = s_next[j];
+
+        const float s = 2.0f * std::sqrt(rot3x3(i, i) - rot3x3(j, j) - rot3x3(k, k) + 1.0f);
+        axis[i] = 0.25f * s;
+        scalar = (rot3x3(k, j) - rot3x3(j, k)) / s;
+        axis[j] = (rot3x3(j, i) + rot3x3(i, j)) / s;
+        axis[k] = (rot3x3(k, i) + rot3x3(i, k)) / s;
     }
+
+    return QQuaternion(scalar, axis[0], axis[1], axis[2]);
 }
 
 
@@ -369,6 +392,20 @@ mat33 mat33::fromDiag(double x, double y, double z)
     return mat;
 }
 
+mat33 mat33::Identity()
+{
+    mat33 mat;
+    mat(0,0)=1.0;
+    mat(1,1)=1.0;
+    mat(2,2)=1.0;
+    mat(0,1)=.0;
+    mat(0,2)=.0;
+    mat(1,0)=.0;
+    mat(1,2)=.0;
+    mat(2,0)=.0;
+    mat(2,1)=.0;
+    return mat;
+}
 
 double& vec3::operator [](int i)
 {
@@ -466,59 +503,5 @@ void print(mat33& mat)
         }
         qDebug()<<"\n";
     }
-
-}
-
-void func(double t, vec3& vec, mat33& cosMat, vec3& resVec, mat33& resMat)
-{
-    mat33 zero;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j)
-            zero(i,j)=.0;
-    }
-    double Ix=80.0, Iy=10.0, Iz=80.0;
-    double dwx=.0/Ix-vec.getY()*vec.getZ()/Ix*(Iz-Iy);
-    double dwy=.0/Iy-vec.getX()*vec.getZ()/Iy*(Ix-Iz);
-    double dwz=.0/Iz-vec.getX()*vec.getY()/Iz*(Iy-Ix);
-    resVec=vec3(dwx,dwy,dwz);
-    //resMat=zero-crossProductMat(vec)*cosMat;
-    resMat=cosMat*crossProductMat3(vec);
-
-}
-
-void step(double& t, vec3& omega, mat33& cosMat, double dt)
-{
-    //using RK4 algorithm
-
-    vec3 vk1,vk2,vk3,vk4;
-    mat33 mk1,mk2,mk3,mk4;
-    vec3 resV;
-    mat33 resM;
-
-    func(t,omega,cosMat,vk1,mk1);
-    mk1=dt*mk1;
-    vk1=dt*vk1;
-    resV=omega+.5*vk1;
-    resM=cosMat+.5*mk1;
-
-    func(t+.5*dt,resV,resM,vk2,mk2);
-    mk2=dt*mk2;
-    vk2=dt*vk2;
-    resV=omega+.5*vk2;
-    resM=cosMat+.5*mk2;
-
-    func(t+.5*dt,resV,resM,vk3,mk3);
-    mk3=dt*mk3;
-    vk3=dt*vk3;
-    resV=omega+vk3;
-    resM=cosMat+mk3;
-
-    func(t+dt,resV,resM,vk4,mk4);
-    mk4=dt*mk4;
-    vk4=dt*vk4;
-
-    t+=dt;
-    omega=omega+.16666666666666666666666666666666666666666666666666666666*(vk1+2.0*vk2+2.0*vk3+vk4);
-    cosMat=cosMat+.16666666666666666666666666666666666666666666666666666666666*(mk1+2.0*mk2+2.0*mk3+mk4);
 
 }
