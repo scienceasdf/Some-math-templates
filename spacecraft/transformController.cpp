@@ -4,9 +4,21 @@
 class damp
 {
 public:
+    damp() {}
     vec3 operator()(vec3 &omega, double t)
     {
         vec3 res(-.5*omega(0),-.5*omega(1),-.5*omega(2));
+        return res;
+    }
+};
+
+class freeObj
+{
+public:
+    freeObj() {};
+    vec3 operator()(vec3 &omega, double t)
+    {
+        vec3 res;
         return res;
     }
 };
@@ -42,7 +54,7 @@ TransformController::TransformController(QObject *parent)
     print(tensor);
     cosineMat=temp.transpose();
 
-    m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,damp());
+    m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,freeObj());
     am=m_body.getAngularMomentum();
     print(am);
     tensor=m_body.getInertiaTensor();
@@ -89,13 +101,15 @@ void TransformController::updateQuat()
 
     static vec3 am,omega,z_;
     static vec3 z(.0,1.0,.0);
-    //z_=m_body.getCosineMat()*z;
+    z_=m_body.getCosineMat()*z;
     //print(z_);
     am=m_body.getAngularMomentum();
+    print(omega);
     omega=m_body.getOmega();
-    //print(am);
+    print(am);
     double T=m_body.getRotKineticEnergy(),theta=angle(z,z_)*degPerRad;
-    //qDebug()<<angle(am,omega)*degPerRad<<theta<<T;
+    qDebug()<<angle(am,omega)*degPerRad<<theta<<T;
+
 
 }
 
