@@ -12,11 +12,13 @@ QT += widgets
 SOURCES += main.cpp \
     scenemodifier.cpp \
     transfromcontroller.cpp \
-    squaternion.cpp
+    squaternion.cpp \
+    rigidbody.cpp
 
 HEADERS += \
     scenemodifier.h \
     transformcontroller.h \
-    squaternion.h
+    squaternion.h \
+    rigidbody.h
 
 
