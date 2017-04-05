@@ -63,6 +63,13 @@ public:
     double& operator[] (int i);
     double& operator()(int i);
     const double& operator()(int i) const;
+
+    vec3& operator+=(const vec3& rhs);
+    vec3& operator-=(const vec3& rhs);
+    vec3& operator+=(const vec3&& rhs);
+    vec3& operator-=(const vec3&& rhs);
+    vec3& operator*=(const double factor);
+
 };
 
 inline double vec3::length() const {return pow(x*x+y*y+z*z,.5);}
@@ -73,6 +80,46 @@ inline double vec3::getZ() const {return z;}
 inline void vec3::setX(double xpos){x=xpos;}
 inline void vec3::setY(double ypos){y=ypos;}
 inline void vec3::setZ(double zpos){z=zpos;}
+
+inline vec3& vec3::operator +=(const vec3& rhs)
+{
+    x+=rhs.x;
+    y+=rhs.y;
+    z+=rhs.z;
+    return *this;
+}
+
+inline vec3& vec3::operator -=(const vec3& rhs)
+{
+    x-=rhs.x;
+    y-=rhs.y;
+    z-=rhs.z;
+    return *this;
+}
+
+inline vec3& vec3::operator +=(const vec3&& rhs)
+{
+    x+=rhs.x;
+    y+=rhs.y;
+    z+=rhs.z;
+    return *this;
+}
+
+inline vec3& vec3::operator -=(const vec3&& rhs)
+{
+    x-=rhs.x;
+    y-=rhs.y;
+    z-=rhs.z;
+    return *this;
+}
+
+inline vec3& vec3::operator *=(const double factor)
+{
+    x*=factor;
+    y*=factor;
+    z*=factor;
+    return *this;
+}
 
 class quaternion{
 
@@ -154,8 +201,89 @@ public:
     static mat33 fromDiag(double x, double y, double z);
     static mat33 Identity();
 
+    mat33& operator+=(const mat33& rhs);
+    mat33& operator-=(const mat33& rhs);
+    mat33& operator+=(const mat33&& rhs);
+    mat33& operator-=(const mat33&& rhs);
+    mat33& operator*=(const double factor);
+
 
 };
+
+inline mat33& mat33::operator+=(const mat33& rhs)
+{
+    a[0][0] += rhs.a[0][0];
+    a[0][1] += rhs.a[0][1];
+    a[0][2] += rhs.a[0][2];
+    a[1][0] += rhs.a[1][0];
+    a[1][1] += rhs.a[1][1];
+    a[1][2] += rhs.a[1][2];
+    a[2][0] += rhs.a[2][0];
+    a[2][1] += rhs.a[2][1];
+    a[2][2] += rhs.a[2][2];
+
+    return *this;
+}
+
+inline mat33& mat33::operator-=(const mat33& rhs)
+{
+    a[0][0] -= rhs.a[0][0];
+    a[0][1] -= rhs.a[0][1];
+    a[0][2] -= rhs.a[0][2];
+    a[1][0] -= rhs.a[1][0];
+    a[1][1] -= rhs.a[1][1];
+    a[1][2] -= rhs.a[1][2];
+    a[2][0] -= rhs.a[2][0];
+    a[2][1] -= rhs.a[2][1];
+    a[2][2] -= rhs.a[2][2];
+
+    return *this;
+}
+
+inline mat33& mat33::operator+=(const mat33&& rhs)
+{
+    a[0][0] += rhs.a[0][0];
+    a[0][1] += rhs.a[0][1];
+    a[0][2] += rhs.a[0][2];
+    a[1][0] += rhs.a[1][0];
+    a[1][1] += rhs.a[1][1];
+    a[1][2] += rhs.a[1][2];
+    a[2][0] += rhs.a[2][0];
+    a[2][1] += rhs.a[2][1];
+    a[2][2] += rhs.a[2][2];
+
+    return *this;
+}
+
+inline mat33& mat33::operator-=(const mat33&& rhs)
+{
+    a[0][0] -= rhs.a[0][0];
+    a[0][1] -= rhs.a[0][1];
+    a[0][2] -= rhs.a[0][2];
+    a[1][0] -= rhs.a[1][0];
+    a[1][1] -= rhs.a[1][1];
+    a[1][2] -= rhs.a[1][2];
+    a[2][0] -= rhs.a[2][0];
+    a[2][1] -= rhs.a[2][1];
+    a[2][2] -= rhs.a[2][2];
+
+    return *this;
+}
+
+inline mat33& mat33::operator*=(const double factor)
+{
+    a[0][0]*=factor;
+    a[0][1]*=factor;
+    a[0][2]*=factor;
+    a[1][0]*=factor;
+    a[1][1]*=factor;
+    a[1][2]*=factor;
+    a[2][0]*=factor;
+    a[2][1]*=factor;
+    a[2][2]*=factor;
+
+    return *this;
+}
 
 const mat33 operator*(const mat33& m1, const mat33& m2);
 
@@ -182,8 +310,16 @@ vec3 operator +(vec3 veca,vec3 vecb);
 vec3 operator -(vec3 veca,vec3 vecb);
 double operator *(vec3r v1, vec3 v2);
 mat33 operator *(vec3 v1,vec3r v2);
-mat33 operator +(mat33 m1, mat33 m2);
-mat33 operator -(mat33 m1, mat33 m2);
+
+//I wanna say some dirty words here
+mat33 operator +(mat33& m1, mat33& m2);
+mat33 operator -(mat33& m1, mat33& m2);
+mat33 operator +(mat33&& m1, mat33&& m2);
+mat33 operator -(mat33&& m1, mat33&& m2);
+mat33 operator +(mat33&& m1, mat33& m2);
+mat33 operator -(mat33&& m1, mat33& m2);
+mat33 operator +(mat33& m1, mat33&& m2);
+mat33 operator -(mat33& m1, mat33&& m2);
 
 void print(vec3& vec);
 void print(mat33& mat);
