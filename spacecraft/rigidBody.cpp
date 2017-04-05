@@ -1,15 +1,19 @@
 #include "rigidbody.h"
 
+
 rigidBody::rigidBody()
 {
 
 }
 
-vec3 rigidBody::moment(vec3 &omega, double t)
+/*vec3 rigidBody::moment(vec3 &omega, double t)
 {
-    vec3 res;   //all zeroes
+    //vec3 res;   //all zeroes
+    //return res;
+    vec3 res(-.5*omega(0),-.5*omega(1),-.5*omega(2));
     return res;
-}
+
+}*/
 
 void rigidBody::func(double t, vec3& vec, mat33& cosMat, vec3& resVec, mat33& resMat)
 {
