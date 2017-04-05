@@ -127,7 +127,7 @@ mat33 crossProductMat(const vec3& vec);
 mat33 getMatrix(vec3 vec, double alpha);
 double length(vec3& vec);
 
-QQuaternion fromMat33(mat33& mat);
+QQuaternion fromMat33(mat33 &&rot3x3);
 QQuaternion fromMat33(mat33&& mat);
 
 class mat33{
@@ -152,6 +152,7 @@ public:
     double& operator() (int i, int t);
 
     static mat33 fromDiag(double x, double y, double z);
+    static mat33 Identity();
 
 
 };
@@ -187,6 +188,5 @@ mat33 operator -(mat33 m1, mat33 m2);
 void print(vec3& vec);
 void print(mat33& mat);
 
-void func(double t, vec3& vec, mat33& cosMat, vec3& resVec, mat33& resMat);
-void step(double& t, vec3& omega, mat33& cosMat, double dt);
+
 #endif // SQUATERNION_H
