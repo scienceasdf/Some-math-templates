@@ -19,7 +19,7 @@ void rigidBody::func(double t, vec3& vec, mat33& cosMat, vec3& resVec, mat33& re
 {
 
 
-    vec3 M=moment(vec,t);
+    vec3 M=moment(vec,cosMat,t);
     double dwx=M.getX()/m_Ix-vec.getY()*vec.getZ()/m_Ix*(m_Iz-m_Iy);
     double dwy=M.getY()/m_Iy-vec.getX()*vec.getZ()/m_Iy*(m_Ix-m_Iz);
     double dwz=M.getZ()/m_Iz-vec.getX()*vec.getY()/m_Iz*(m_Iy-m_Ix);
@@ -43,30 +43,30 @@ void rigidBody::do_step(double dt)
     double t=m_time;
 
     func(t,m_omega,m_cosMat,vk1,mk1);
-    mk1=dt*mk1;
-    vk1=dt*vk1;
+    mk1*=dt;
+    vk1*=dt;
     resV=m_omega+.5*vk1;
     resM=m_cosMat+.5*mk1;
 
     func(t+.5*dt,resV,resM,vk2,mk2);
-    mk2=dt*mk2;
-    vk2=dt*vk2;
+    mk2*=dt;
+    vk2*=dt;
     resV=m_omega+.5*vk2;
     resM=m_cosMat+.5*mk2;
 
     func(t+.5*dt,resV,resM,vk3,mk3);
-    mk3=dt*mk3;
-    vk3=dt*vk3;
+    mk3*=dt;
+    vk3*=dt;
     resV=m_omega+vk3;
     resM=m_cosMat+mk3;
 
     func(t+dt,resV,resM,vk4,mk4);
-    mk4=dt*mk4;
-    vk4=dt*vk4;
+    mk4*=dt;
+    vk4*=dt;
 
     m_time+=dt;
-    m_omega=m_omega+.16666666666666666666666666666666666666666666666666666666*(vk1+2.0*vk2+2.0*vk3+vk4);
-    m_cosMat=m_cosMat+.16666666666666666666666666666666666666666666666666666666666*(mk1+2.0*mk2+2.0*mk3+mk4);
+    m_omega+=(.16666666666666666666666666666666666666666666666666666666*(vk1+2.0*vk2+2.0*vk3+vk4));
+    m_cosMat+=(.16666666666666666666666666666666666666666666666666666666666*(mk1+2.0*mk2+2.0*mk3+mk4));
 
 }
 
