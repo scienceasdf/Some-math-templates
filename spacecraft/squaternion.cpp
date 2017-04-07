@@ -1,576 +1,291 @@
-#include"squaternion.h"
-#include<QDebug>
+#ifndef SQUATERNION_H
+#define SQUATERNION_H
+
+#include<cmath>
 
 
-//得到给定矩阵src的逆矩阵保存到des中。
-bool GetMatrixInverse(double src[3][3],int n,double des[3][3])
+
+#include<QQuaternion>
+
+/*#include<E:\eigen\Eigen/Dense>
+#include<E:\eigen\Eigen/LU>
+#include<E:\eigen\Eigen/Eigenvalues>
+
+typedef Eigen::Matrix<double,3,1> vec3;
+typedef Eigen::Matrix<double,3,3> mat33;*/
+
+class mat33;
+class vec3;
+
+void  getAStart(double arcs[3][3],int n,double ans[3][3]);
+double getA(double arcs[3][3],int n);
+bool GetMatrixInverse(double src[3][3],int n,double des[3][3]);
+
+class vec3r{
+public:
+    double x,y,z;
+    double& operator()(int i);
+    const double& operator()(int i) const;
+};
+
+class vec3{
+
+    friend mat33 rotationMatrix(const vec3& vec, double alpha);
+    friend mat33 crossProductMat(const vec3& vec);
+    friend vec3 operator*(mat33 mat, vec3 vec);
+    friend bool GetMatrixInverse(double src[3][3],int n,double des[3][3]);
+
+private:
+    double x,y,z;
+
+
+public:
+    vec3() :x(.0), y(.0), z(.0) {}
+    vec3(double xpos, double ypos, double zpos)
+        :x(xpos), y(ypos), z(zpos) {}
+
+    ~vec3() {}
+
+    double length() const;
+    double lengthSquared() const;
+    void normalize();
+    vec3 normalized() const;
+    vec3r transpose() {vec3r v1; v1.x=x;v1.y=y;v1.z=z; return v1;}
+
+    inline void setX(double xpos);
+    void setY(double ypos);
+    void setZ(double zpos);
+
+    double getX() const;
+    double getY() const;
+    double getZ() const;
+
+    double& operator[] (int i);
+    double& operator()(int i);
+    const double& operator()(int i) const;
+
+    vec3& operator+=(const vec3& rhs);
+    vec3& operator-=(const vec3& rhs);
+    vec3& operator+=(const vec3&& rhs);
+    vec3& operator-=(const vec3&& rhs);
+    vec3& operator*=(const double factor);
+
+};
+
+inline double vec3::length() const {return pow(x*x+y*y+z*z,.5);}
+inline double vec3::lengthSquared() const {return (x*x+y*y+z*z);}
+inline double vec3::getX() const {return x;}
+inline double vec3::getY() const {return y;}
+inline double vec3::getZ() const {return z;}
+inline void vec3::setX(double xpos){x=xpos;}
+inline void vec3::setY(double ypos){y=ypos;}
+inline void vec3::setZ(double zpos){z=zpos;}
+
+inline vec3& vec3::operator +=(const vec3& rhs)
 {
-    double flag=getA(src,n);
-    double t[3][3];
-    if(flag==0){
-        return false;
-    }
-    else{
-        getAStart(src,n,t);
-        for(int i=0;i<n;i++){
-            for(int j=0;j<n;j++){
-                des[i][j]=t[i][j]/flag;
-            }
-
-        }
-    }
-    return true;
+    x+=rhs.x;
+    y+=rhs.y;
+    z+=rhs.z;
+    return *this;
 }
 
-//按第一行展开计算|A|
-double getA(double arcs[3][3],int n)
+inline vec3& vec3::operator -=(const vec3& rhs)
 {
-    if(n==1)
-    {
-        return arcs[0][0];
-    }
-    double ans = 0;
-    double temp[3][3]={0.0};
-    int i,j,k;
-    for(i=0;i<n;i++){
-        for(j=0;j<n-1;j++){
-            for(k=0;k<n-1;k++){
-                temp[j][k] = arcs[j+1][(k>=i)?k+1:k];
-
-            }
-        }
-        double t = getA(temp,n-1);
-        if(i%2==0){
-            ans += arcs[0][i]*t;
-        }
-        else{
-            ans -=  arcs[0][i]*t;
-        }
-    }
-    return ans;
+    x-=rhs.x;
+    y-=rhs.y;
+    z-=rhs.z;
+    return *this;
 }
 
-//计算每一行每一列的每个元素所对应的余子式，组成A*
-void  getAStart(double arcs[3][3],int n,double ans[3][3])
+inline vec3& vec3::operator +=(const vec3&& rhs)
 {
-    if(n==1){
-        ans[0][0] = 1;
-        return;
-    }
-    int i,j,k,t;
-    double temp[3][3];
-    for(i=0;i<n;i++){
-        for(j=0;j<n;j++){
-            for(k=0;k<n-1;k++){
-                for(t=0;t<n-1;t++){
-                    temp[k][t] = arcs[k>=i?k+1:k][t>=j?t+1:t];
-                }
-            }
-
-            ans[j][i]  =  getA(temp,n-1);
-            if((i+j)%2 == 1){
-                ans[j][i] = - ans[j][i];
-            }
-        }
-    }
+    x+=rhs.x;
+    y+=rhs.y;
+    z+=rhs.z;
+    return *this;
 }
 
-const quaternion operator*(const quaternion& q1, const quaternion& q2)
+inline vec3& vec3::operator -=(const vec3&& rhs)
 {
-    double s,i,j,k,s1,s2,x1,x2,y1,y2,z1,z2;
-    s1=q1.s; s2=q2.s;
-    x1=q1.x; x2=q2.x;
-    y1=q1.y; y2=q2.y;
-    z1=q1.z; z2=q2.z;
-    s=(s1*s2-x1*x2-y1*y2-z1*z2);
-    i=(s1*x2+s2*x1+y1*z2-y2*z1);
-    j=(s1*y2+s2*y1+z1*x2-x1*z2);
-    k=(s1*z2+s2*z1+x1*y2-x2*y1);
-    quaternion res(s,i,j,k);
-    return res;
+    x-=rhs.x;
+    y-=rhs.y;
+    z-=rhs.z;
+    return *this;
 }
 
-
-quaternion quaternion::conjugated() const
+inline vec3& vec3::operator *=(const double factor)
 {
-    quaternion res=quaternion(s,-x,-y,-z);
-    return res;
+    x*=factor;
+    y*=factor;
+    z*=factor;
+    return *this;
 }
 
-void quaternion::normalize()
+class quaternion{
+
+    //friend const quaternion operator*(const quaternion& q1, const quaternion& q2) const;
+    friend const quaternion operator*(const quaternion& q1, const quaternion& q2);
+private:
+    double x,y,z,s;
+public:
+    quaternion(double scalar, double xpos, double ypos, double zpos)
+        :s(scalar), x(xpos), y(ypos), z(zpos) {}
+    quaternion(double scalar, const vec3& vector);
+    quaternion(): s(.0),x(.0),y(.0),z(.0) {}
+    ~quaternion() {}
+
+    double length() const;
+    double lengthSquared() const;
+
+    void normalize();
+    quaternion normalized() const;
+    quaternion conjugated() const;
+
+    double getScalar() const;
+    double getX() const;
+    double getY() const;
+    double getZ() const;
+
+    void setScalar(double scalar);
+    void setX(double xpos);
+    void setY(double ypos);
+    void setZ(double zpos);
+
+
+
+
+};
+
+inline double quaternion::lengthSquared() const {return (x*x+y*y+z*z+s*s);}
+inline double quaternion::length() const {return pow(x*x+y*y+z*z+s*s,.5);}
+inline double quaternion::getX() const {return x;}
+inline double quaternion::getY() const {return y;}
+inline double quaternion::getZ() const {return z;}
+inline double quaternion::getScalar() const {return s;}
+inline void quaternion::setX(double xpos) {x=xpos;}
+inline void quaternion::setY(double ypos) {y=ypos;}
+inline void quaternion::setZ(double zpos) {z=zpos;}
+inline void quaternion::setScalar(double scalar) {s=scalar;}
+
+const double radPerDeg=3.141592653589793/180.0;
+const double degPerRad=180.0/3.141592653583297;
+
+mat33 crossProductMat(const vec3& vec);
+mat33 getMatrix(vec3 vec, double alpha);
+double length(vec3& vec);
+
+//QQuaternion fromMat33(mat33 &&rot3x3);
+QQuaternion fromMat33(const mat33& mat);
+
+class mat33{
+
+    //friend mat33 quaternion::toRotationMatrix();
+    friend mat33 rotationMatrix(const vec3& vec, double alpha);
+    friend mat33 crossProductMat(const vec3& vec);
+    friend const mat33 operator*(const mat33& m1, const mat33& m2);
+    friend mat33 operator*(double factor, mat33 mat);
+    friend vec3 operator*(mat33 mat, vec3 vec);
+    friend mat33 crossProductMat(const vec3& vec);
+private:
+    double a[3][3];
+    bool orthogonal;
+public:
+    mat33() {}
+    ~mat33() {}
+
+    mat33 inverse();
+    mat33 transpose();
+
+    double& operator() (int i, int t);
+    const double& operator() (int i, int j) const;
+
+    static mat33 fromDiag(double x, double y, double z);
+    static mat33 Identity();
+
+    mat33& operator+=(const mat33& rhs);
+    mat33& operator-=(const mat33& rhs);
+    mat33& operator*=(const double factor);
+
+
+};
+
+inline mat33& mat33::operator+=(const mat33& rhs)
 {
-    double l=length();
-    s/=l;
-    x/=l;
-    y/=l;
-    z/=l;
+    a[0][0] += rhs.a[0][0];
+    a[0][1] += rhs.a[0][1];
+    a[0][2] += rhs.a[0][2];
+    a[1][0] += rhs.a[1][0];
+    a[1][1] += rhs.a[1][1];
+    a[1][2] += rhs.a[1][2];
+    a[2][0] += rhs.a[2][0];
+    a[2][1] += rhs.a[2][1];
+    a[2][2] += rhs.a[2][2];
+
+    return *this;
 }
 
-void vec3::normalize()
+inline mat33& mat33::operator-=(const mat33& rhs)
 {
-    double l=length();
-    x/=l;
-    y/=l;
-    z/=l;
-}
+    a[0][0] -= rhs.a[0][0];
+    a[0][1] -= rhs.a[0][1];
+    a[0][2] -= rhs.a[0][2];
+    a[1][0] -= rhs.a[1][0];
+    a[1][1] -= rhs.a[1][1];
+    a[1][2] -= rhs.a[1][2];
+    a[2][0] -= rhs.a[2][0];
+    a[2][1] -= rhs.a[2][1];
+    a[2][2] -= rhs.a[2][2];
 
-double& vec3::operator [](int i)
-{
-    return (i==0)?x:((i==1)?y:z);
-}
-
-double& vec3::operator()(int i)
-{
-    return (i==0)?x:((i==1)?y:z);
-}
-
-const double& vec3::operator()(int i) const
-{
-    return (i==0)?x:((i==1)?y:z);
-}
-
-
-double dotProduct(const vec3& vec1, const vec3& vec2)
-{
-    return vec1(0)*vec2(0)+vec1(1)*vec2(1)+vec1(2)*vec2(2);
-}
-
-double angle(const vec3& vec1, const vec3& vec2)
-{
-    return acos(dotProduct(vec1,vec2)/vec1.length()/vec2.length());
-}
-
-mat33 crossProductMat(const vec3& vec)
-{
-    mat33 mat;
-
-    mat(0,0)=.0;
-    mat(1,1)=.0;
-    mat(2,2)=.0;
-    mat(0,1)=-vec(2);
-    mat(0,2)=vec(1);
-    mat(1,0)=vec(2);
-    mat(1,2)=-vec(0);
-    mat(2,0)=-vec(1);
-    mat(2,1)=vec(0);
-    return mat;
-}
-
-mat33 crossProductMat2(const vec3& vec)
-{
-    mat33 mat;
-
-    mat(0,0)=.0;
-    mat(1,1)=.0;
-    mat(2,2)=.0;
-    mat(0,1)=vec(2);
-    mat(0,2)=-vec(1);
-    mat(1,0)=-vec(2);
-    mat(1,2)=vec(0);
-    mat(2,0)=vec(1);
-    mat(2,1)=-vec(0);
-    return mat;
-}
-
-mat33 crossProductMat3(const vec3& vec)
-{
-    mat33 mat;
-
-    mat(0,0)=.0;
-    mat(1,1)=.0;
-    mat(2,2)=.0;
-    mat(1,0)=vec(2);
-    mat(2,0)=-vec(1);
-    mat(0,1)=-vec(2);
-    mat(2,1)=vec(0);
-    mat(0,2)=vec(1);
-    mat(1,2)=-vec(0);
-    return mat;
-}
-
-mat33 getMatrix(vec3 vec, double alpha)
-{
-    mat33 res;
-
-    mat33 I;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            I(i,j)=(i==j)?1.0:.0;
-        }
-    }
-
-    vec.normalize();
-    mat33 E=crossProductMat(vec);
-    //print(E);
-    //print(I);
-    //std::cout<<vec.transpose()<<"\n";
-    res=cos(alpha)*I+(1-cos(alpha))*vec*vec.transpose()-sin(alpha)*E;
-    return res;
-}
-
-double length(vec3& vec)
-{
-    return pow(vec(0)*vec(0)+vec(1)*vec(1)+vec(2)*vec(2),.5);
-}
-
-QQuaternion fromMat33(mat33& rot3x3)
-{
-    // Algorithm from:
-    // http://www.j3d.org/matrix_faq/matrfaq_latest.html#Q55
-
-    float scalar;
-    float axis[3];
-
-    const float trace = rot3x3(0, 0) + rot3x3(1, 1) + rot3x3(2, 2);
-    if (trace > 0.00000001f) {
-        const float s = 2.0f * std::sqrt(trace + 1.0f);
-        scalar = 0.25f * s;
-        axis[0] = (rot3x3(2, 1) - rot3x3(1, 2)) / s;
-        axis[1] = (rot3x3(0, 2) - rot3x3(2, 0)) / s;
-        axis[2] = (rot3x3(1, 0) - rot3x3(0, 1)) / s;
-    } else {
-        static int s_next[3] = { 1, 2, 0 };
-        int i = 0;
-        if (rot3x3(1, 1) > rot3x3(0, 0))
-            i = 1;
-        if (rot3x3(2, 2) > rot3x3(i, i))
-            i = 2;
-        int j = s_next[i];
-        int k = s_next[j];
-
-        const float s = 2.0f * std::sqrt(rot3x3(i, i) - rot3x3(j, j) - rot3x3(k, k) + 1.0f);
-        axis[i] = 0.25f * s;
-        scalar = (rot3x3(k, j) - rot3x3(j, k)) / s;
-        axis[j] = (rot3x3(j, i) + rot3x3(i, j)) / s;
-        axis[k] = (rot3x3(k, i) + rot3x3(i, k)) / s;
-    }
-
-    return QQuaternion(scalar, axis[0], axis[1], axis[2]);
-}
-
-QQuaternion fromMat33(mat33&& rot3x3)
-{
-    // Algorithm from:
-    // http://www.j3d.org/matrix_faq/matrfaq_latest.html#Q55
-
-    float scalar;
-    float axis[3];
-
-    const float trace = rot3x3(0, 0) + rot3x3(1, 1) + rot3x3(2, 2);
-    if (trace > 0.00000001f) {
-        const float s = 2.0f * std::sqrt(trace + 1.0f);
-        scalar = 0.25f * s;
-        axis[0] = (rot3x3(2, 1) - rot3x3(1, 2)) / s;
-        axis[1] = (rot3x3(0, 2) - rot3x3(2, 0)) / s;
-        axis[2] = (rot3x3(1, 0) - rot3x3(0, 1)) / s;
-    } else {
-        static int s_next[3] = { 1, 2, 0 };
-        int i = 0;
-        if (rot3x3(1, 1) > rot3x3(0, 0))
-            i = 1;
-        if (rot3x3(2, 2) > rot3x3(i, i))
-            i = 2;
-        int j = s_next[i];
-        int k = s_next[j];
-
-        const float s = 2.0f * std::sqrt(rot3x3(i, i) - rot3x3(j, j) - rot3x3(k, k) + 1.0f);
-        axis[i] = 0.25f * s;
-        scalar = (rot3x3(k, j) - rot3x3(j, k)) / s;
-        axis[j] = (rot3x3(j, i) + rot3x3(i, j)) / s;
-        axis[k] = (rot3x3(k, i) + rot3x3(i, k)) / s;
-    }
-
-    return QQuaternion(scalar, axis[0], axis[1], axis[2]);
+    return *this;
 }
 
 
-mat33 mat33::transpose()
+inline mat33& mat33::operator*=(const double factor)
 {
-    mat33 res;
-    res.a[0][0]=a[0][0];
-    res.a[0][1]=a[1][0];
-    res.a[0][2]=a[2][0];
-    res.a[1][0]=a[0][1];
-    res.a[1][1]=a[1][1];
-    res.a[1][2]=a[2][1];
-    res.a[2][0]=a[0][2];
-    res.a[2][1]=a[1][2];
-    res.a[2][2]=a[2][2];
+    a[0][0]*=factor;
+    a[0][1]*=factor;
+    a[0][2]*=factor;
+    a[1][0]*=factor;
+    a[1][1]*=factor;
+    a[1][2]*=factor;
+    a[2][0]*=factor;
+    a[2][1]*=factor;
+    a[2][2]*=factor;
 
-    return res;
+    return *this;
 }
 
-mat33 rotationMatrix(const vec3& vec, double alpha)
-{
-    //A matrix map a vector in the origin frame to the vector
-    //in the body frame( or the rotated frame)
+const mat33 operator*(const mat33& m1, const mat33& m2);
 
-    double e1=vec.x,e2=vec.y,e3=vec.z;
-    double s=pow(e1*e1+e2*e2+e3*e3,.5);
-    e1/=s;
-    e2/=s;
-    e3/=s;
-
-    double ca=cos(alpha);
-    double sa=sin(alpha);
-
-    mat33 res;
-
-    res.a[0][0]=ca+e1*e1*(1.0-ca);
-    res.a[0][1]=e1*e2*(1.0-ca)+e3*sa;
-    res.a[0][2]=e1*e3*(1.0-ca)-e2*sa;
-    res.a[1][0]=e1*e2*(1.0-ca)-e3*sa;
-    res.a[1][1]=ca+e2*e2*(1.0-ca);
-    res.a[1][2]=e2*e3*(1.0-ca)+e1*sa;
-    res.a[2][0]=e1*e3*(1.0-ca)+e2*sa;
-    res.a[2][1]=e2*e3*(1.0-ca)-e1*sa;
-    res.a[2][2]=ca+e3*e3*(1.0-ca);
-
-    return res;
-}
-
-/*mat33 crossProductMat(const vec3& vec)
-{
-    mat33 res;
-    res.a[0][0]=.0;
-    res.a[1][1]=.0;
-    res.a[2][2]=.0;
-    res.a[0][1]=-vec.z;
-    res.a[0][2]=vec.y;
-    res.a[1][0]=vec.z;
-    res.a[1][2]=-vec.x;
-    res.a[2][0]=-vec.y;
-    res.a[2][2]=vec.x;
-    return res;
-}*/
-
-const mat33 operator*(const mat33& m1, const mat33& m2)
-{
-    mat33 res;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            res.a[i][j]=.0;
-            for(int k=0;k<3;++k)
-                res.a[i][j]+=m1.a[i][k]*m2.a[k][j];
-        }
-    }
-
-    return res;
-}
-
-mat33 operator*(double factor, mat33 mat)
-{
-    mat33 res;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            res.a[i][j]=mat.a[i][j]*factor;
-        }
-    }
-
-    return res;
-}
-
-vec3 operator*(mat33 mat, vec3 vec)
-{
-    vec3 res;
-
-    res.x=mat.a[0][0]*vec.x+mat.a[0][1]*vec.y+mat.a[0][2]*vec.z;
-    res.y=mat.a[1][0]*vec.x+mat.a[1][1]*vec.y+mat.a[1][2]*vec.z;
-    res.z=mat.a[2][0]*vec.x+mat.a[2][1]*vec.y+mat.a[2][2]*vec.z;
-
-    return res;
-}
-
-mat33 mat33::inverse()
-{
-    mat33 res;
-    GetMatrixInverse(a,3,res.a);
-    return res;
-}
-
-double& mat33::operator ()(int i,int j)
-{
-    return a[i][j];
-}
-
-mat33 mat33::fromDiag(double x, double y, double z)
-{
-    mat33 mat;
-    mat(0,0)=x;
-    mat(1,1)=y;
-    mat(2,2)=z;
-    mat(0,1)=.0;
-    mat(0,2)=.0;
-    mat(1,0)=.0;
-    mat(1,2)=.0;
-    mat(2,0)=.0;
-    mat(2,1)=.0;
-    return mat;
-}
-
-mat33 mat33::Identity()
-{
-    mat33 mat;
-    mat(0,0)=1.0;
-    mat(1,1)=1.0;
-    mat(2,2)=1.0;
-    mat(0,1)=.0;
-    mat(0,2)=.0;
-    mat(1,0)=.0;
-    mat(1,2)=.0;
-    mat(2,0)=.0;
-    mat(2,1)=.0;
-    return mat;
-}
+class mat66{
+private:
+    double a[6][6];
+public:
+    mat66() {}
+};
 
 
+double dotProduct(const vec3& vec1, const vec3& vec2);
+double angle(const vec3& vec1, const vec3& vec2);
+mat33 crossProductMat(const vec3& vec);
+mat33 crossProductMat2(const vec3& vec);
+mat33 crossProductMat3(const vec3& vec);
+mat33 rotationMatrix(const vec3& vec, double alpha);
 
-vec3 operator *(double factor, vec3 vec)
-{
-    vec*=factor;
-    return vec;
-}
+const quaternion operator*(const quaternion& q1, const quaternion& q2);
+mat33 operator*(double factor, mat33 mat);
+vec3 operator*(mat33 mat, vec3 vec);
+vec3 operator *(double factor, vec3 vec);
+vec3 operator +(vec3 veca,vec3 vecb);
+vec3 operator -(vec3 veca,vec3 vecb);
+double operator *(vec3r v1, vec3 v2);
+mat33 operator *(vec3 v1,vec3r v2);
 
-vec3 operator +(vec3 veca,vec3 vecb)
-{
-    veca+=vecb;
-    return veca;
-}
+mat33 operator +(const mat33& m1, const mat33& m2);
+mat33 operator -(const mat33& m1, const mat33& m2);
 
-vec3 operator -(vec3 veca,vec3 vecb)
-{
-    veca-=vecb;
-    return veca;
-}
+void print(vec3& vec);
+void print(const mat33& mat);
 
-double& vec3r::operator()(int i)
-{
-    return (i==0)?x:((i==1)?y:z);
-}
 
-const double& vec3r::operator()(int i) const
-{
-    return (i==0)?x:((i==1)?y:z);
-}
-
-mat33 operator *(vec3 v1, vec3r v2)
-{
-    mat33 res;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            res(i,j)=v1(i)*v2(j);
-        }
-    }
-    return res;
-}
-
-double operator *(vec3r v1,vec3 v2)
-{
-    double res=.0;
-    res=v1(0)*v2(0)+v1(1)*v2(1)+v1(2)*v2(2);
-    return res;
-}
-
-mat33 operator +(mat33& m1, mat33& m2)
-{
-    mat33 res;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            res(i,j)=m1(i,j)+m2(i,j);
-        }
-    }
-    return res;
-}
-
-mat33 operator -(mat33& m1, mat33& m2)
-{
-    mat33 res;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            res(i,j)=m1(i,j)-m2(i,j);
-        }
-    }
-    return res;
-}
-
-mat33 operator +(mat33&& m1, mat33&& m2)
-{
-    mat33 res;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            res(i,j)=m1(i,j)+m2(i,j);
-        }
-    }
-    return res;
-}
-
-mat33 operator -(mat33&& m1, mat33&& m2)
-{
-    mat33 res;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            res(i,j)=m1(i,j)-m2(i,j);
-        }
-    }
-    return res;
-}
-
-mat33 operator +(mat33&& m1, mat33& m2)
-{
-    mat33 res;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            res(i,j)=m1(i,j)+m2(i,j);
-        }
-    }
-    return res;
-}
-
-mat33 operator -(mat33&& m1, mat33& m2)
-{
-    mat33 res;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            res(i,j)=m1(i,j)-m2(i,j);
-        }
-    }
-    return res;
-}
-
-mat33 operator +(mat33& m1, mat33&& m2)
-{
-    mat33 res;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            res(i,j)=m1(i,j)+m2(i,j);
-        }
-    }
-    return res;
-}
-
-mat33 operator -(mat33& m1, mat33&& m2)
-{
-    mat33 res;
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            res(i,j)=m1(i,j)-m2(i,j);
-        }
-    }
-    return res;
-}
-
-void print(vec3& vec)
-{
-    qDebug() <<vec(0)<<"i+"<<vec(1)<<"j+"<<vec(2)<<"k\t";
-}
-
-void print(mat33& mat)
-{
-    for(int i=0;i<3;++i){
-        for(int j=0;j<3;++j){
-            qDebug()<<mat(i,j)<<"\t";
-        }
-        qDebug()<<"\n";
-    }
-
-}
+#endif // SQUATERNION_H
