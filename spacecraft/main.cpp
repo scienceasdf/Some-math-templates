@@ -1,5 +1,3 @@
-
-
 #include "scenemodifier.h"
 
 #include <QGuiApplication>
@@ -13,6 +11,7 @@
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QCheckBox>
 #include <QtWidgets/QCommandLinkButton>
+#include <QtWidgets/QPushButton>
 #include <QtGui/QScreen>
 
 #include <Qt3DInput/QInputAspect>
@@ -72,8 +71,9 @@ int main(int argc, char **argv)
     // Camera
     Qt3DRender::QCamera *cameraEntity = view->camera();
 
-    cameraEntity->lens()->setPerspectiveProjection(45.0f, 16.0f/9.0f, 0.1f, 1000.0f);
-    cameraEntity->setPosition(QVector3D(0, 0, 20.0f));
+    cameraEntity->lens()->setPerspectiveProjection(45.0f, 16.0f/9.0f, .1f, 1000.0f);
+    //cameraEntity->lens()->setProjectionType(Qt3DRender::QCameraLens::OrthographicProjection);
+    cameraEntity->setPosition(QVector3D(-5.0f, 4.0f, 20.0f));
     cameraEntity->setUpVector(QVector3D(0, 1, 0));
     cameraEntity->setViewCenter(QVector3D(0, 0, 0));
 
@@ -96,66 +96,37 @@ int main(int argc, char **argv)
     // Set root object of the scene
     view->setRootEntity(rootEntity);
 
-    // Create control widgets
-    QCommandLinkButton *info = new QCommandLinkButton();
-    info->setText(QStringLiteral("Qt3D ready-made meshes"));
-    info->setDescription(QString::fromLatin1("Qt3D provides several ready-made meshes, like torus, cylinder, cone, "
-                                             "cube, plane and sphere."));
-    info->setIconSize(QSize(0,0));
+    QPushButton *spinButton1=new QPushButton(widget);
+    spinButton1->setText("短粗体卫星绕最大惯量轴自旋");
 
-    QCheckBox *torusCB = new QCheckBox(widget);
-    torusCB->setChecked(true);
-    torusCB->setText(QStringLiteral("Torus"));
+    QPushButton *spinButton2=new QPushButton(widget);
+    spinButton2->setText("细长体卫星绕最大惯量轴自旋");
 
-    QCheckBox *coneCB = new QCheckBox(widget);
-    coneCB->setChecked(true);
-    coneCB->setText(QStringLiteral("Cone"));
+    QPushButton *pdSimulateButton=new QPushButton(widget);
+    pdSimulateButton->setText("基于四元数的PD三轴姿态控制");
 
-    QCheckBox *cylinderCB = new QCheckBox(widget);
-    cylinderCB->setChecked(true);
-    cylinderCB->setText(QStringLiteral("Cylinder"));
+    QPushButton *unstabAxisButton=new QPushButton(widget);
+    unstabAxisButton->setText("不对称卫星绕中间惯量轴的不稳定自旋");
 
-    QCheckBox *cuboidCB = new QCheckBox(widget);
-    cuboidCB->setChecked(true);
-    cuboidCB->setText(QStringLiteral("Cuboid"));
+    QPushButton *ANC_button=new QPushButton(widget);
+    ANC_button->setText("主动章动控制仿真");
 
-    QCheckBox *planeCB = new QCheckBox(widget);
-    planeCB->setChecked(true);
-    planeCB->setText(QStringLiteral("Plane"));
+    vLayout->addWidget(spinButton1);
+    vLayout->addWidget(spinButton2);
+    vLayout->addWidget(pdSimulateButton);
+    vLayout->addWidget(unstabAxisButton);
+    vLayout->addWidget(ANC_button);
 
-    QCheckBox *sphereCB = new QCheckBox(widget);
-    sphereCB->setChecked(true);
-    sphereCB->setText(QStringLiteral("Sphere"));
-
-    vLayout->addWidget(info);
-    vLayout->addWidget(torusCB);
-    vLayout->addWidget(coneCB);
-    vLayout->addWidget(cylinderCB);
-    vLayout->addWidget(cuboidCB);
-    vLayout->addWidget(planeCB);
-    vLayout->addWidget(sphereCB);
-
-    QObject::connect(torusCB, &QCheckBox::stateChanged,
-                     modifier, &SceneModifier::enableTorus);
-    QObject::connect(coneCB, &QCheckBox::stateChanged,
-                     modifier, &SceneModifier::enableCone);
-    QObject::connect(cylinderCB, &QCheckBox::stateChanged,
-                     modifier, &SceneModifier::enableCylinder);
-    QObject::connect(cuboidCB, &QCheckBox::stateChanged,
-                     modifier, &SceneModifier::enableCuboid);
-    QObject::connect(planeCB, &QCheckBox::stateChanged,
-                     modifier, &SceneModifier::enablePlane);
-    QObject::connect(sphereCB, &QCheckBox::stateChanged,
-                     modifier, &SceneModifier::enableSphere);
-    QObject::connect(info,&QCommandLinkButton::clicked,
+    QObject::connect(spinButton1,&QPushButton::clicked,
+                     modifier,&SceneModifier::spin1);
+    QObject::connect(spinButton2,&QPushButton::clicked,
+                     modifier,&SceneModifier::spin2);
+    QObject::connect(pdSimulateButton,&QPushButton::clicked,
+                     modifier,&SceneModifier::pd_simulate);
+    QObject::connect(unstabAxisButton,&QPushButton::clicked,
+                     modifier,&SceneModifier::unstabAxisSimulate);
+    QObject::connect(ANC_button,&QPushButton::clicked,
                      modifier,&SceneModifier::up);
-
-    torusCB->setChecked(true);
-    coneCB->setChecked(true);
-    cylinderCB->setChecked(true);
-    cuboidCB->setChecked(true);
-    planeCB->setChecked(true);
-    sphereCB->setChecked(true);
 
     // Show window
     widget->show();
@@ -165,3 +136,4 @@ int main(int argc, char **argv)
 
     return app.exec();
 }
+
