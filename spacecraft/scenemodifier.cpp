@@ -13,22 +13,16 @@ SceneModifier::SceneModifier(Qt3DCore::QEntity *rootEntity)
     : m_rootEntity(rootEntity)
 {
 
-    // Torus shape data
-    //! [0]
-    m_torus = new Qt3DExtras::QTorusMesh();
-    m_torus->setRadius(1.0f);
-    m_torus->setMinorRadius(0.4f);
-    m_torus->setRings(100);
-    m_torus->setSlices(20);
-    //! [0]
+    Qt3DExtras::QCylinderMesh *c1 = new Qt3DExtras::QCylinderMesh();
+    c1->setRadius(.1);
+    c1->setLength(3);
+    c1->setRings(100);
+    c1->setSlices(20);
+    Qt3DCore::QTransform *c1Transform = new Qt3DCore::QTransform();
+    c1Transform->setScale(1.5f);
+    c1Transform->setRotation(QQuaternion::fromAxisAndAngle(QVector3D(1.0f, 0.0f, 0.0f), .0f));
+    c1Transform->setTranslation(QVector3D(-5.0f, 4.0f, -1.5));
 
-    // TorusMesh Transform
-    //! [1]
-    Qt3DCore::QTransform *torusTransform = new Qt3DCore::QTransform();
-    torusTransform->setScale(2.0f);
-    torusTransform->setRotation(QQuaternion::fromAxisAndAngle(QVector3D(0.0f, 1.0f, 0.0f), 25.0f));
-    torusTransform->setTranslation(QVector3D(5.0f, 4.0f, 0.0f));
-    //! [1]
 
     //! [2]
     Qt3DExtras::QPhongMaterial *torusMaterial = new Qt3DExtras::QPhongMaterial();
@@ -37,10 +31,10 @@ SceneModifier::SceneModifier(Qt3DCore::QEntity *rootEntity)
 
     // Torus
     //! [3]
-    m_torusEntity = new Qt3DCore::QEntity(m_rootEntity);
-    m_torusEntity->addComponent(m_torus);
-    m_torusEntity->addComponent(torusMaterial);
-    m_torusEntity->addComponent(torusTransform);
+    m_axisEntity = new Qt3DCore::QEntity(m_rootEntity);
+    m_axisEntity->addComponent(c1);
+    m_axisEntity->addComponent(torusMaterial);
+    m_axisEntity->addComponent(c1Transform);
     //! [3]
 
     // Cone shape data
@@ -83,10 +77,10 @@ SceneModifier::SceneModifier(Qt3DCore::QEntity *rootEntity)
     cylinderMaterial->setDiffuse(QColor(QRgb(0x928327)));
 
     // Cylinder
-    m_cylinderEntity = new Qt3DCore::QEntity(m_rootEntity);
-    m_cylinderEntity->addComponent(cylinder);
-    m_cylinderEntity->addComponent(cylinderMaterial);
-    m_cylinderEntity->addComponent(cylinderTransform);
+    m_satEntity = new Qt3DCore::QEntity(m_rootEntity);
+    m_satEntity->addComponent(cylinder);
+    m_satEntity->addComponent(cylinderMaterial);
+    m_satEntity->addComponent(cylinderTransform);
 
     // Cuboid shape data
     Qt3DExtras::QCuboidMesh *cuboid = new Qt3DExtras::QCuboidMesh();
@@ -153,92 +147,92 @@ SceneModifier::~SceneModifier()
 {
 }
 
-//! [4]
-void SceneModifier::enableTorus(bool enabled)
+void SceneModifier::setSome(int type)
 {
-    m_torusEntity->setParent(enabled ? m_rootEntity : nullptr);
-}
-//! [4]
+    delete m_satEntity;
+    m_satEntity = new Qt3DCore::QEntity(m_rootEntity);
 
-void SceneModifier::enableCone(bool enabled)
-{
-    m_coneEntity->setParent(enabled ? m_rootEntity : nullptr);
-}
+    Qt3DExtras::QPhongMaterial *satMaterial=new Qt3DExtras::QPhongMaterial();
+    satMaterial->setDiffuse(QColor(QRgb(0x928327)));
 
-void SceneModifier::enableCylinder(bool enabled)
-{
-    m_cylinderEntity->setParent(enabled ? m_rootEntity : nullptr);
-}
 
-void SceneModifier::enableCuboid(bool enabled)
-{
-    m_cuboidEntity->setParent(enabled ? m_rootEntity : nullptr);
-}
 
-void SceneModifier::enablePlane(bool enabled)
-{
-    m_planeEntity->setParent(enabled ? m_rootEntity : nullptr);
-}
+    // satMesh Transform
+    Qt3DCore::QTransform *satTransform = new Qt3DCore::QTransform();
+    satTransform->setScale(1.5f);
 
-void SceneModifier::enableSphere(bool enabled)
-{
-    m_sphereEntity->setParent(enabled ? m_rootEntity : nullptr);
-}
-
-void SceneModifier::up_date()
-{
-
-    delete m_cylinderEntity;
-     m_cylinderEntity = new Qt3DCore::QEntity(m_rootEntity);
-
-    // Cylinder shape data
-    /*Qt3DExtras::QCylinderMesh *cylinder = new Qt3DExtras::QCylinderMesh();
-    cylinder->setRadius(1);
-    cylinder->setLength(3);
-    cylinder->setRings(100);
-    cylinder->setSlices(20);*/
-
-     Qt3DExtras::QCuboidMesh *cylinder = new Qt3DExtras::QCuboidMesh();
-     cylinder->setYExtent(.6);
-
-     Qt3DExtras::QPhongMaterial *cylinderMaterial=new Qt3DExtras::QPhongMaterial();
-     cylinderMaterial->setDiffuse(QColor(QRgb(0x928327)));
-
-    // CylinderMesh Transform
-    Qt3DCore::QTransform *cylinderTransform = new Qt3DCore::QTransform();
-    cylinderTransform->setScale(1.5f);
-    //cylinderTransform->setRotation(QQuaternion::fromAxisAndAngle(QVector3D(1.0f, 0.0f, 0.0f), 55.0f));
-    cylinderTransform->setTranslation(QVector3D(-5.0f, 4.0f, -1.5));
-    TransformController *ctrl=new TransformController(cylinderTransform);
-    ctrl->setTarget(cylinderTransform);
+    satTransform->setTranslation(QVector3D(-5.0f, 4.0f, -1.5));
+    TransformController *ctrl=new TransformController(satTransform);
+    ctrl->setType(type);
+    ctrl->setTarget(satTransform);
     ctrl->setTime(.0f);
 
-
-    QPropertyAnimation *animation=new QPropertyAnimation(cylinderTransform);
+    QPropertyAnimation *animation=new QPropertyAnimation(satTransform);
     animation->setTargetObject(ctrl);
     animation->setPropertyName("time");
     animation->setDuration(100000);
     animation->setStartValue(QVariant::fromValue(.0));
-    animation->setEndValue(QVariant::fromValue(200000000));
+    animation->setEndValue(QVariant::fromValue(800000000));
     animation->setLoopCount(1);
     animation->start();
 
+    // sat
+    m_satEntity->addComponent(satTransform);
+    m_satEntity->addComponent(satMaterial);
 
+}
 
-    /*Qt3DExtras::QGoochMaterial* cylinderMaterial=new Qt3DExtras::QGoochMaterial();
-    cylinderMaterial->setCool(Qt::blue);
-    cylinderMaterial->setWarm(Qt::red);
-    cylinderMaterial->setAlpha(.3);
-    cylinderMaterial->setDiffuse(QColor(QRgb(0x928327)));*/
+void SceneModifier::up_date()
+{
+    setSome(2);
 
+    Qt3DExtras::QCuboidMesh *sat = new Qt3DExtras::QCuboidMesh();
+    sat->setYExtent(.6);
 
+    m_satEntity->addComponent(sat);
 
-    // Cylinder
+}
 
-    m_cylinderEntity->addComponent(cylinder);
-    m_cylinderEntity->addComponent(cylinderMaterial);
-    m_cylinderEntity->addComponent(cylinderTransform);
+void SceneModifier::spin1()
+{
+    setSome(1);
 
+    Qt3DExtras::QCuboidMesh *sat = new Qt3DExtras::QCuboidMesh();
+    sat->setYExtent(.6);
+
+    m_satEntity->addComponent(sat);
+
+}
+
+void SceneModifier::spin2()
+{
+    setSome(0);
+
+    Qt3DExtras::QCuboidMesh *sat = new Qt3DExtras::QCuboidMesh();
+    sat->setYExtent(1.2);
+
+    m_satEntity->addComponent(sat);
+
+}
+
+void SceneModifier::pd_simulate()
+{
+    setSome(3);
+
+    Qt3DExtras::QCuboidMesh *sat = new Qt3DExtras::QCuboidMesh();
+    sat->setYExtent(.6);
+
+    m_satEntity->addComponent(sat);
+}
+
+void SceneModifier::unstabAxisSimulate()
+{
+    setSome(4);
+
+    Qt3DExtras::QCuboidMesh *sat = new Qt3DExtras::QCuboidMesh();
+    sat->setYExtent(.6);
+
+    m_satEntity->addComponent(sat);
 
 }
 
@@ -246,3 +240,6 @@ void SceneModifier::up()
 {
     up_date();
 }
+
+
+
