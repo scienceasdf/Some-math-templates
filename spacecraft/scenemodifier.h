@@ -29,25 +29,25 @@ public:
     void up_date();
 
 public slots:
-    void enableTorus(bool enabled);
-    void enableCone(bool enabled);
-    void enableCylinder(bool enabled);
-    void enableCuboid(bool enabled);
-    void enablePlane(bool enabled);
-    void enableSphere(bool enabled);
-
+    void spin1();
+    void spin2();
+    void pd_simulate();
+    void unstabAxisSimulate();
     void up();
 
 private:
     Qt3DCore::QEntity *m_rootEntity;
     Qt3DExtras::QTorusMesh *m_torus;
     Qt3DCore::QEntity *m_coneEntity;
-    Qt3DCore::QEntity *m_cylinderEntity;
-    Qt3DCore::QEntity *m_torusEntity;
+    Qt3DCore::QEntity *m_satEntity;
+    Qt3DCore::QEntity *m_axisEntity;
     Qt3DCore::QEntity *m_cuboidEntity;
     Qt3DCore::QEntity *m_planeEntity;
     Qt3DCore::QEntity *m_sphereEntity;
+
+    void setSome(int type);
 };
 
 #endif // SCENEMODIFIER_H
+
 
