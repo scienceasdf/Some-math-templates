@@ -1,5 +1,5 @@
 #include"transformcontroller.h"
-#include"squaternion.h"
+
 
 
 
@@ -40,8 +40,10 @@ class ANCsystem
 public:
     vec3 operator()(vec3 &omega, mat33& cosMat, double t)
     {
-        double T=(omega(2)>1e-3)?-6.0:(omega(2)<-1e-3)?6.0:.0;
-        vec3 res(-.0*omega(0),-.0*omega(1),-.0*omega(2)+T);
+        double T=(omega(2)>.04)?-150.0:.0;//:(omega(2)<-1e-3)?6.0:.0;
+        double S=.0;//=(omega(0)>.04)?-150.0:.0;
+        vec3 res(-.0*omega(0)+S,-.0*omega(1),-.0*omega(2)+T);
+        qDebug()<<res(2);
         return res;
     }
 };
@@ -54,29 +56,23 @@ private:
 public:
     PDcontroller():m_target(rotationMatrix(vec3(1.0,.0,.0),1.57))
     {
-        print(m_target*m_target.transpose());
-        qDebug()<<"aaa";
         m_target=m_target.transpose();
         m_q=fromMat33(m_target);
     }
 
     vec3 operator()(vec3 &omega, mat33& cosMat, double t)
     {
-        /*mat33 Me=cosMat.transpose()*m_target;
-        print(Me);*/
         static QQuaternion quat;
         static QQuaternion qe;
         quat=fromMat33(cosMat);
         qe=quat.conjugate()*m_q;
         double s=qe.scalar();
-        /*double Tcx=-12.0*(Me(2,1)-Me(1,2))-252.0*omega(0);
-        double Tcy=-12.0*(Me(2,0)-Me(0,2))-252.0*omega(1);
-        double Tcz=-12.0*(Me(1,0)-Me(0,1))-252.0*omega(2);*/
 
-        double Tcx=12.0*(qe.x()*s)-22.0*omega(0);
-        double Tcy=12.0*(qe.y()*s)-22.0*omega(1);
-        double Tcz=12.0*(qe.z()*s)-22.0*omega(2);
-        //qDebug()<<Tcx<<Tcy<<Tcz;
+
+        double Tcx=22.0*(qe.x()*s)-24.0*omega(0);
+        double Tcy=22.0*(qe.y()*s)-24.0*omega(1);
+        double Tcz=22.0*(qe.z()*s)-24.0*omega(2);
+
         vec3 res(Tcx,Tcy,Tcz);
         return res;
     }
@@ -91,7 +87,7 @@ TransformController::TransformController(QObject *parent)
     mat33 tensor,cosineMat;
     vec3 angularM,omega;
 
-    double Ix=100.0,Iy=40.0,Iz=140.0;
+    double Ix=100.0,Iy=40.0,Iz=100.0;
     tensor=mat33::fromDiag(Ix,Iy,Iz);
 
     angularM[0]=.0;
@@ -103,27 +99,158 @@ TransformController::TransformController(QObject *parent)
     vec[1]=.0;
     vec[2]=.0;
 
-    mat33 temp=getMatrix(vec,0.0*radPerDeg);
+    mat33 temp=getMatrix(vec,23.0*radPerDeg);
 
     tensor=temp.transpose()*tensor*temp;
     omega=tensor.inverse()*angularM;
     omega=temp*omega;
     vec3 am=tensor*(temp.transpose()*omega);
     //print(am);
-    print(tensor);
+    //print(tensor);
     cosineMat=temp.transpose();
 
     //cosineMat=mat33::Identity();
-    cosineMat=rotationMatrix(vec3(1.0,.0,.0),.0).transpose();
+    //cosineMat=rotationMatrix(vec3(1.0,.0,.0),.0).transpose();
     //omega=vec3(.1,2.0,0.01);
-    omega=vec3(.01,10.0,.10);
+    //omega=vec3(.01,10.0,.10);
 
-    m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,damp());
+
+    //m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,ANCsystem());
     am=m_body.getAngularMomentum();
+    //print(am);
+    tensor=m_body.getInertiaTensor();
+    //print(tensor);
+
+}
+
+void TransformController::setType(int type)
+{
+    mat33 tensor,cosineMat;
+    vec3 angularM,omega;
+    double Ix,Iy,Iz;
+
+    vec3 vec;
+    vec[0]=1.0;
+    vec[1]=.0;
+    vec[2]=.0;
+
+    mat33 temp;
+
+    vec3 am;
+
+    switch (type) {
+    case 0:
+        //short bold rotation dynamics simulation
+        Ix=100;
+        Iy=60;
+        Iz=100;
+        tensor=mat33::fromDiag(Ix,Iy,Iz);
+
+        temp=getMatrix(vec,20.0*radPerDeg);
+
+        tensor=temp.transpose()*tensor*temp;
+
+        angularM[0]=.0;
+        angularM[1]=230.0;
+        angularM[2]=0.;
+        omega=tensor.inverse()*angularM;
+
+        omega=temp*omega;
+
+        cosineMat=temp.transpose();
+        m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,freeObj());
+
+        break;
+    case 1:
+        //slender body rotation dynamics simulation
+        Ix=60;
+        Iy=100;
+        Iz=60;
+        tensor=mat33::fromDiag(Ix,Iy,Iz);
+
+        temp=getMatrix(vec,20.0*radPerDeg);
+
+        tensor=temp.transpose()*tensor*temp;
+
+        angularM[0]=.0;
+        angularM[1]=230.0;
+        angularM[2]=0.;
+        omega=tensor.inverse()*angularM;
+
+        omega=temp*omega;
+        am=tensor*(temp.transpose()*omega);
+        print(am);
+        qDebug()<<"aaaaooo";
+
+        cosineMat=temp.transpose();
+        m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,freeObj());
+
+        break;
+    case 2:
+        //active nutation control simulation
+        Ix=200.0;
+        Iy=80.0;
+        Iz=200.0;
+        tensor=mat33::fromDiag(Ix,Iy,Iz);
+
+        temp=getMatrix(vec,20.0*radPerDeg);
+        tensor=temp.transpose()*tensor*temp;
+
+        angularM[0]=.0;
+        angularM[1]=430.0;
+        angularM[2]=0.;
+        omega=tensor.inverse()*angularM;
+
+        omega=temp*omega;
+        am=tensor*(temp.transpose()*omega);
+
+        print(tensor);
+        cosineMat=temp.transpose();
+
+        m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,ANCsystem());
+        break;
+
+    case 3:
+        Ix=100.0;
+        Iy=40.0;
+        Iz=100.0;
+
+        cosineMat=getMatrix(vec3(1.0,.0,.0),10.0*radPerDeg).transpose();
+        omega=vec3(.1,2.0,0.01);
+
+        m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,PDcontroller());
+        break;
+    case 4:
+        Ix=110.0;
+        Iy=100.0;
+        Iz=90.0;
+        tensor=mat33::fromDiag(Ix,Iy,Iz);
+
+        temp=getMatrix(vec,7.0*radPerDeg);
+        tensor=temp.transpose()*tensor*temp;
+
+        angularM[0]=.0;
+        angularM[1]=430.0;
+        angularM[2]=0.;
+        omega=tensor.inverse()*angularM;
+
+        omega=temp*omega;
+        am=tensor*(temp.transpose()*omega);
+
+        print(tensor);
+        cosineMat=temp.transpose();
+
+        m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,freeObj());
+        break;
+    default:
+        break;
+    }
+
+    am=m_body.getAngularMomentum();
+    qDebug()<<"eeeuuuu";
     print(am);
     tensor=m_body.getInertiaTensor();
-    print(tensor);
-
+    //print(tensor);
 }
 
 void TransformController::setTarget(Qt3DCore::QTransform *target)
@@ -176,4 +303,5 @@ void TransformController::updateQuat()
 
 
 }
+
 
