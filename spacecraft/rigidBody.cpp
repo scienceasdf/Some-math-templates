@@ -17,17 +17,13 @@ rigidBody::rigidBody()
 
 void rigidBody::func(double t, vec3& vec, mat33& cosMat, vec3& resVec, mat33& resMat)
 {
-
-
     vec3 M=moment(vec,cosMat,t);
-    double dwx=M.getX()/m_Ix-vec.getY()*vec.getZ()/m_Ix*(m_Iz-m_Iy);
-    double dwy=M.getY()/m_Iy-vec.getX()*vec.getZ()/m_Iy*(m_Ix-m_Iz);
-    double dwz=M.getZ()/m_Iz-vec.getX()*vec.getY()/m_Iz*(m_Iy-m_Ix);
+    double dwx=M.getX()/m_Ix+vec.getY()*vec.getZ()/m_Ix*(m_Iz-m_Iy);
+    double dwy=M.getY()/m_Iy+vec.getX()*vec.getZ()/m_Iy*(m_Ix-m_Iz);
+    double dwz=M.getZ()/m_Iz+vec.getX()*vec.getY()/m_Iz*(m_Iy-m_Ix);
     resVec=vec3(dwx,dwy,dwz);
-    //resMat=zero-crossProductMat(vec)*cosMat;
-    resMat=cosMat*crossProductMat3(vec);
 
-
+    resMat=crossProductMat3(vec)*cosMat;
 
 }
 
@@ -77,20 +73,21 @@ double rigidBody::getRotKineticEnergy()
 
 vec3 rigidBody::getAngularMomentum()
 {
-    return m_cosMat*(m_inertia*m_omega);
+    return m_cosMat.transpose()*(m_inertia*m_omega);
 }
 
 vec3 rigidBody::getOmega()
 {
-    return m_cosMat*m_omega;
+    return m_cosMat.transpose()*m_omega;
 }
 
 mat33 rigidBody::getInertiaTensor()
 {
-    return m_cosMat*m_inertia*m_cosMat.transpose();
+    return m_cosMat.transpose()*m_inertia*m_cosMat;
 }
 
 mat33 rigidBody::getCosineMat()
 {
     return m_cosMat;
 }
+
