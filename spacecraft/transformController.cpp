@@ -140,7 +140,7 @@ void TransformController::setType(int type)
 
     switch (type) {
     case 0:
-        //short bold rotation dynamics simulation
+        //slender rotation dynamics simulation
         Ix=100;
         Iy=60;
         Iz=100;
@@ -153,19 +153,20 @@ void TransformController::setType(int type)
         angularM[0]=.0;
         angularM[1]=230.0;
         angularM[2]=0.;
-        omega=tensor.inverse()*angularM;
+        omega=tensor.inverse()*angularM;    //in the inertial frame
 
-        omega=temp*omega;
+        omega=temp*omega;                   //in the body frame
 
-        cosineMat=temp.transpose();
+        cosineMat=temp;//.transpose();
         m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,freeObj());
 
         break;
     case 1:
-        //slender body rotation dynamics simulation
+        //short bold body rotation dynamics simulation
         Ix=60;
         Iy=100;
         Iz=60;
+
         tensor=mat33::fromDiag(Ix,Iy,Iz);
 
         temp=getMatrix(vec,20.0*radPerDeg);
@@ -173,7 +174,7 @@ void TransformController::setType(int type)
         tensor=temp.transpose()*tensor*temp;
 
         angularM[0]=.0;
-        angularM[1]=230.0;
+        angularM[1]=240.0;
         angularM[2]=0.;
         omega=tensor.inverse()*angularM;
 
@@ -182,7 +183,7 @@ void TransformController::setType(int type)
         print(am);
         qDebug()<<"aaaaooo";
 
-        cosineMat=temp.transpose();
+        cosineMat=temp;
         m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,freeObj());
 
         break;
@@ -205,7 +206,7 @@ void TransformController::setType(int type)
         am=tensor*(temp.transpose()*omega);
 
         print(tensor);
-        cosineMat=temp.transpose();
+        cosineMat=temp;
 
         m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,ANCsystem());
         break;
@@ -215,7 +216,7 @@ void TransformController::setType(int type)
         Iy=40.0;
         Iz=100.0;
 
-        cosineMat=getMatrix(vec3(1.0,.0,.0),10.0*radPerDeg).transpose();
+        cosineMat=getMatrix(vec3(1.0,.0,.0),10.0*radPerDeg);
         omega=vec3(.1,2.0,0.01);
 
         m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,PDcontroller());
@@ -238,7 +239,7 @@ void TransformController::setType(int type)
         am=tensor*(temp.transpose()*omega);
 
         print(tensor);
-        cosineMat=temp.transpose();
+        cosineMat=temp;
 
         m_body=rigidBody(Ix,Iy,Iz,cosineMat,omega,freeObj());
         break;
@@ -292,15 +293,16 @@ void TransformController::updateQuat()
 
     static vec3 am,omega,z_;
     static vec3 z(.0,1.0,.0);
-    z_=m_body.getCosineMat()*z;
+    z_=m_body.getCosineMat().transpose()*z;     //express the vector in the inertial frame
     //print(z_);
     am=m_body.getAngularMomentum();
-    print(omega);
-    omega=m_body.getOmega();
-    print(am);
-    double T=m_body.getRotKineticEnergy(),theta=angle(z,z_)*degPerRad;
-    qDebug()<<angle(am,omega)*degPerRad<<theta<<T;
 
+    //omega=m_body.getOmega();
+    omega=m_body.m_omega;
+    print(omega);
+    print(am);
+    double T=m_body.getRotKineticEnergy(),theta=angle(z,z_)*degPerRad;  //theta is called the nutation angle
+    qDebug()<<angle(z,omega)*degPerRad<<theta<<T;
 
 }
 
