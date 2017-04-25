@@ -245,7 +245,7 @@ QQuaternion fromMat33(const mat33& rot3x3)
         axis[k] = (rot3x3(k, i) + rot3x3(i, k)) / s;
     }
 
-    return QQuaternion(scalar, axis[0], axis[1], axis[2]);
+    return QQuaternion(scalar, -axis[0], -axis[1], -axis[2]);
 }
 
 
